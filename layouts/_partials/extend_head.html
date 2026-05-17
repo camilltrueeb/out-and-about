@@ -46,6 +46,24 @@
   .wishlist-tag--travel  { background: #fde8d8; color: #7d3c10; }
   .wishlist-tag--group   { background: #f8d7da; color: #721c24; }
 
+  /* Visits column */
+  .wishlist-visits { white-space: nowrap; }
+  .wl-count { display: inline-block; min-width: 1.5rem; text-align: center; }
+  .wl-inc, .wl-dec {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 1px 6px;
+    color: var(--primary);
+  }
+  .wl-inc { margin-left: 4px; }
+  .wl-dec { margin-right: 4px; }
+  .wl-inc:hover, .wl-dec:hover { background: var(--entry); }
+  .wl-inc:disabled, .wl-dec:disabled { opacity: 0.4; cursor: default; }
+
   /* Wishlist lightbox */
   #wl-lb {
     border: none;

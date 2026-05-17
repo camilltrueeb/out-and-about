@@ -1,7 +1,10 @@
-baseURL = "http://localhost:1313/"
+baseURL = "https://example.com/"
 Locale = "en-us"
 title = "Out And About"
 theme = "PaperMod"
+
+[params]
+  mainSections = ["posts"]
 
 [[menus.main]]
 name = "Wishlist"

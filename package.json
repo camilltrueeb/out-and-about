@@ -1,8 +1,9 @@
 {
   "scripts": {
-    "dev": "concurrently \"npx decap-server\" \"hugo server\""
+    "dev": "concurrently \"npx decap-server\" \"netlify dev\""
   },
   "devDependencies": {
+    "@netlify/blobs": "^10.7.7",
     "concurrently": "^9.0.0"
   }
 }

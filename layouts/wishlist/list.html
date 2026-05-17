@@ -14,6 +14,7 @@
         <th>Distance from Zürich</th>
         <th>Link</th>
         <th>Notes</th>
+        <th>Visits</th>
       </tr>
     </thead>
     <tbody>
@@ -35,6 +36,11 @@
         <td class="wishlist-distance">{{ with .Params.distance_km }}{{ . }} km{{ end }}</td>
         <td>{{- with .Params.reference }}<a href="{{ . }}" target="_blank" rel="noopener">↗</a>{{- end }}</td>
         <td class="wishlist-notes">{{ .Params.notes }}</td>
+        <td class="wishlist-visits" data-slug="{{ .Title | urlize }}">
+          <button class="wl-dec" title="Remove a visit">−</button>
+          <span class="wl-count">—</span>
+          <button class="wl-inc" title="Log a visit">+</button>
+        </td>
       </tr>
       {{- end }}
     </tbody>
@@ -48,6 +54,39 @@
 <script>
   document.querySelectorAll('.wishlist-thumb').forEach(img => {
     img.style.cursor = 'zoom-in';
+  });
+
+  // Load visit counts
+  document.querySelectorAll('.wishlist-visits').forEach(async cell => {
+    const slug = cell.dataset.slug;
+    try {
+      const res = await fetch(`/.netlify/functions/visit?slug=${slug}`);
+      const { count } = await res.json();
+      cell.querySelector('.wl-count').textContent = count;
+    } catch (err) {
+      cell.querySelector('.wl-count').textContent = '—';
+    }
+  });
+
+  async function postVisit(cell, delta) {
+    const slug = cell.dataset.slug;
+    const url = `/.netlify/functions/visit?slug=${slug}` + (delta === -1 ? '&delta=-1' : '');
+    cell.querySelectorAll('button').forEach(b => b.disabled = true);
+    try {
+      const res = await fetch(url, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) cell.querySelector('.wl-count').textContent = data.count;
+    } finally {
+      cell.querySelectorAll('button').forEach(b => b.disabled = false);
+    }
+  }
+
+  document.querySelectorAll('.wl-inc').forEach(btn => {
+    btn.addEventListener('click', () => postVisit(btn.closest('.wishlist-visits'), 1));
+  });
+
+  document.querySelectorAll('.wl-dec').forEach(btn => {
+    btn.addEventListener('click', () => postVisit(btn.closest('.wishlist-visits'), -1));
   });
 </script>
 {{- end }}

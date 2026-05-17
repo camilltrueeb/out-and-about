@@ -1,0 +1,7 @@
+[build]
+  command = "hugo -b $URL"
+  publish = "public"
+
+[dev]
+  command = "hugo server --disableLiveReload --appendPort=false --baseURL http://localhost:8888"
+  targetPort = 1313
