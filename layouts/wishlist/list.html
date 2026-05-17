@@ -1,0 +1,53 @@
+{{- define "main" }}
+<header class="page-header">
+  <h1>{{ .Title }}</h1>
+  {{- with .Description }}<p class="page-description">{{ . }}</p>{{- end }}
+</header>
+
+<div class="wishlist-wrap">
+  <table class="wishlist">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Distance from Zürich</th>
+        <th>Link</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{- range sort .Pages "Params.distance_km" }}
+      <tr>
+        <td class="wishlist-img-cell">
+          {{- with .Params.image }}
+          {{- $assetPath := strings.TrimPrefix "/" . }}
+          {{- $img := resources.Get $assetPath }}
+          {{- if $img }}
+          <img src="{{ $img.Permalink }}" alt="{{ $.Title }}" class="wishlist-thumb" onclick="document.getElementById('wl-lb').showModal();document.getElementById('wl-lb-img').src=this.src">
+          {{- else }}
+          <img src="{{ . | absURL }}" alt="{{ $.Title }}" class="wishlist-thumb" onclick="document.getElementById('wl-lb').showModal();document.getElementById('wl-lb-img').src=this.src">
+          {{- end }}
+          {{- end }}
+        </td>
+        <td class="wishlist-name">{{ .Title }}</td>
+        <td><span class="wishlist-tag wishlist-tag--{{ .Params.activity | lower }}">{{ .Params.activity }}</span></td>
+        <td class="wishlist-distance">{{ with .Params.distance_km }}{{ . }} km{{ end }}</td>
+        <td>{{- with .Params.reference }}<a href="{{ . }}" target="_blank" rel="noopener">↗</a>{{- end }}</td>
+        <td class="wishlist-notes">{{ .Params.notes }}</td>
+      </tr>
+      {{- end }}
+    </tbody>
+  </table>
+</div>
+
+<dialog id="wl-lb" onclick="this.close()">
+  <img id="wl-lb-img" src="" alt="">
+</dialog>
+
+<script>
+  document.querySelectorAll('.wishlist-thumb').forEach(img => {
+    img.style.cursor = 'zoom-in';
+  });
+</script>
+{{- end }}

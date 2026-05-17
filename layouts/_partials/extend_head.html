@@ -4,4 +4,65 @@
     object-fit: cover;
     object-position: center;
   }
+
+  /* Wishlist table */
+  .wishlist-wrap { overflow-x: auto; }
+  .wishlist {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+  .wishlist th, .wishlist td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .wishlist th { color: var(--secondary); font-weight: 600; white-space: nowrap; }
+  .wishlist tbody tr:hover { background: var(--entry); }
+  .wishlist-img-cell { width: 72px; padding: 6px 8px; }
+  .wishlist-thumb {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: block;
+  }
+  .wishlist-name { font-weight: 500; }
+  .wishlist-notes { color: var(--secondary); max-width: 260px; }
+  .wishlist-distance { white-space: nowrap; }
+  .wishlist-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: var(--code-bg);
+  }
+  .wishlist-tag--hike    { background: #d4edda; color: #1a5c2a; }
+  .wishlist-tag--bicycle { background: #cce5ff; color: #004085; }
+  .wishlist-tag--canoe   { background: #d1ecf1; color: #0c5460; }
+  .wishlist-tag--city    { background: #e2d9f3; color: #4a235a; }
+  .wishlist-tag--escape  { background: #fff3cd; color: #856404; }
+  .wishlist-tag--travel  { background: #fde8d8; color: #7d3c10; }
+  .wishlist-tag--group   { background: #f8d7da; color: #721c24; }
+
+  /* Wishlist lightbox */
+  #wl-lb {
+    border: none;
+    background: transparent;
+    padding: 0;
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+  #wl-lb::backdrop {
+    background: rgba(0, 0, 0, 0.75);
+    cursor: zoom-out;
+  }
+  #wl-lb img {
+    display: block;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 8px;
+    object-fit: contain;
+  }
 </style>

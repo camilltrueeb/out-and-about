@@ -2,3 +2,8 @@ baseURL = "http://localhost:1313/"
 Locale = "en-us"
 title = "Out And About"
 theme = "PaperMod"
+
+[[menus.main]]
+name = "Wishlist"
+url = "/wishlist/"
+weight = 10

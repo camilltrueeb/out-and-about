@@ -27,3 +27,19 @@ collections:
           - { label: "Alt text", name: "alt", widget: "string", required: false }
           - { label: "Caption", name: "caption", widget: "string", required: false }
       - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: "wishlist"
+    label: "Wishlist"
+    folder: "content/wishlist"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Name", name: "title", widget: "string" }
+      - label: "Type"
+        name: "activity"
+        widget: "select"
+        options: ["Hike", "Bicycle", "Canoe", "City", "Escape", "Travel", "Group"]
+      - { label: "Distance from Zürich (km)", name: "distance_km", widget: "number", required: false }
+      - { label: "Reference link", name: "reference", widget: "string", required: false }
+      - { label: "Picture", name: "image", widget: "image", required: false }
+      - { label: "Notes", name: "notes", widget: "text", required: false }
