@@ -1,0 +1,5 @@
+- name: Kyoto
+  type: culture
+  distance_km: 9200
+  url: https://example.com
+  image: /images/kyoto.jpg
