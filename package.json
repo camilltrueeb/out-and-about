@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "dev": "concurrently \"npx decap-server\" \"hugo server\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
