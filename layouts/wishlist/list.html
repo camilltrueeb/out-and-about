@@ -5,7 +5,7 @@
 </header>
 
 <div class="wl-filters">
-  <button class="wl-filter active" data-filter="all">All</button>
+  <button class="wl-filter active" data-filter="all">Alle</button>
   {{- $activities := slice }}
   {{- range .Pages }}
     {{- with .Params.activity }}
@@ -23,11 +23,11 @@
       <tr>
         <th></th>
         <th>Name</th>
-        <th class="wl-sortable" data-col="type">Type <span class="wl-sort-icon"></span></th>
-        <th class="wl-sortable" data-col="distance">Distance from Zürich <span class="wl-sort-icon"></span></th>
+        <th class="wl-sortable" data-col="type">Art <span class="wl-sort-icon"></span></th>
+        <th class="wl-sortable" data-col="distance">Distanz ab Zürich <span class="wl-sort-icon"></span></th>
         <th>Link</th>
-        <th>Notes</th>
-        <th class="wl-sortable" data-col="visits">Visits <span class="wl-sort-icon"></span></th>
+        <th>Notizen</th>
+        <th class="wl-sortable" data-col="visits">Besuche <span class="wl-sort-icon"></span></th>
       </tr>
     </thead>
     <tbody>
@@ -50,9 +50,9 @@
         <td>{{- with .Params.reference }}<a href="{{ . }}" target="_blank" rel="noopener">↗</a>{{- end }}</td>
         <td class="wishlist-notes">{{ .Params.notes }}</td>
         <td class="wishlist-visits" data-slug="{{ .Title | urlize }}">
-          <button class="wl-dec" title="Remove a visit">−</button>
+          <button class="wl-dec" title="Besuch entfernen">−</button>
           <span class="wl-count">—</span>
-          <button class="wl-inc" title="Log a visit">+</button>
+          <button class="wl-inc" title="Besuch eintragen">+</button>
         </td>
       </tr>
       {{- end }}

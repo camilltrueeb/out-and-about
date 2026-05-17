@@ -1,8 +1,8 @@
 ---
-title: "Coaz Hike"
+title: "Coaz Wanderung"
 activity: "Hike"
 distance_km: 204
 reference: "https://www.coaz.ch"
 image: "/images/img_1609-scaled.jpeg"
-notes: "blablablabla"
+notes: "Wunderschöne Wanderung im Engadin"
 ---
