@@ -1,5 +1,5 @@
 ---
-title: "Coaz Wanderung"
+title: "Coaz"
 activity: "Wanderung"
 distance_km: 204
 reference: "https://www.coaz.ch"

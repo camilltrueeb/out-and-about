@@ -11,22 +11,22 @@ extension: md
 
 collections:
   - name: "posts"
-    label: "Beiträge"
+    label: "Posts"
     folder: "content/posts"
     create: true
     slug: "{{slug}}"
     fields:
-      - { label: "Titel", name: "title", widget: "string" }
-      - { label: "Datum", name: "date", widget: "datetime" }
-      - label: "Titelbild"
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Date", name: "date", widget: "datetime" }
+      - label: "Cover"
         name: "cover"
         widget: "object"
         required: false
         fields:
-          - { label: "Bild", name: "image", widget: "image", required: false }
-          - { label: "Bildtext", name: "alt", widget: "string", required: false }
-          - { label: "Bildunterschrift", name: "caption", widget: "string", required: false }
-      - { label: "Inhalt", name: "body", widget: "markdown" }
+          - { label: "Image", name: "image", widget: "image", required: false }
+          - { label: "Alt text", name: "alt", widget: "string", required: false }
+          - { label: "Caption", name: "caption", widget: "string", required: false }
+      - { label: "Body", name: "body", widget: "markdown" }
 
   - name: "wohin"
     label: "Wohin"
@@ -35,11 +35,11 @@ collections:
     slug: "{{slug}}"
     fields:
       - { label: "Name", name: "title", widget: "string" }
-      - label: "Art"
+      - label: "Type"
         name: "activity"
         widget: "select"
-        options: ["Wanderung", "Fahrrad", "Kanu", "Stadt", "Auszeit", "Reise", "Gruppe"]
-      - { label: "Distanz ab Zürich (km)", name: "distance_km", widget: "number", required: false }
-      - { label: "Referenz-Link", name: "reference", widget: "string", required: false }
-      - { label: "Bild", name: "image", widget: "image", required: false }
-      - { label: "Notizen", name: "notes", widget: "text", required: false }
+        options: ["Wandern", "Velo", "Wasser", "Stadt", "Zen", "Reise", "Social"]
+      - { label: "Distanz von ZH (km)", name: "distance_km", widget: "number", required: false }
+      - { label: "Reference link", name: "reference", widget: "string", required: false }
+      - { label: "Picture", name: "image", widget: "image", required: false }
+      - { label: "Notes", name: "notes", widget: "text", required: false }
