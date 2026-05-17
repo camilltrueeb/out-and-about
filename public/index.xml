@@ -6,35 +6,14 @@
     <description>Recent content on Out And About</description>
     <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 17 May 2026 00:11:00 +0200</lastBuildDate>
+    <lastBuildDate>Sun, 17 May 2026 09:56:00 +0200</lastBuildDate>
     <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>asdsadas</title>
-      <link>http://localhost:1313/posts/asdsadas/</link>
-      <pubDate>Sun, 17 May 2026 00:11:00 +0200</pubDate>
-      <guid>http://localhost:1313/posts/asdsadas/</guid>
-      <description>&lt;p&gt;asdasdasd&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>fadsadasd</title>
-      <link>http://localhost:1313/posts/fadsadasd/</link>
-      <pubDate>Sun, 17 May 2026 00:09:00 +0200</pubDate>
-      <guid>http://localhost:1313/posts/fadsadasd/</guid>
-      <description>&lt;p&gt;asdasdsd&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>vfdgfdgf</title>
-      <link>http://localhost:1313/posts/vfdgfdgf/</link>
-      <pubDate>Sun, 17 May 2026 00:09:00 +0200</pubDate>
-      <guid>http://localhost:1313/posts/vfdgfdgf/</guid>
-      <description>&lt;p&gt;fgdfgdfgdf&lt;/p&gt;</description>
-    </item>
-    <item>
-      <title>dsdasdasddasdas</title>
-      <link>http://localhost:1313/posts/dsdasd/</link>
-      <pubDate>Sun, 17 May 2026 00:08:00 +0200</pubDate>
-      <guid>http://localhost:1313/posts/dsdasd/</guid>
-      <description>&lt;p&gt;asdasdasdsadasadadsadasd&lt;/p&gt;</description>
+      <title>Koa</title>
+      <link>http://localhost:1313/posts/koa/</link>
+      <pubDate>Sun, 17 May 2026 09:56:00 +0200</pubDate>
+      <guid>http://localhost:1313/posts/koa/</guid>
+      <description>&lt;p&gt;This is a post about Koa&lt;/p&gt;</description>
     </item>
     <item>
       <title>Japan</title>
