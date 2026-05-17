@@ -4,6 +4,19 @@
   {{- with .Description }}<p class="page-description">{{ . }}</p>{{- end }}
 </header>
 
+<div class="wl-filters">
+  <button class="wl-filter active" data-filter="all">All</button>
+  {{- $activities := slice }}
+  {{- range .Pages }}
+    {{- with .Params.activity }}
+      {{- $activities = $activities | append . }}
+    {{- end }}
+  {{- end }}
+  {{- range ($activities | uniq | sort) }}
+  <button class="wl-filter" data-filter="{{ . | lower }}">{{ . }}</button>
+  {{- end }}
+</div>
+
 <div class="wishlist-wrap">
   <table class="wishlist">
     <thead>
@@ -19,7 +32,7 @@
     </thead>
     <tbody>
       {{- range sort .Pages "Params.distance_km" }}
-      <tr>
+      <tr data-activity="{{ .Params.activity | lower }}">
         <td class="wishlist-img-cell">
           {{- with .Params.image }}
           {{- $assetPath := strings.TrimPrefix "/" . }}
@@ -87,6 +100,17 @@
 
   document.querySelectorAll('.wl-dec').forEach(btn => {
     btn.addEventListener('click', () => postVisit(btn.closest('.wishlist-visits'), -1));
+  });
+
+  document.querySelectorAll('.wl-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.wl-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      document.querySelectorAll('.wishlist tbody tr').forEach(row => {
+        row.hidden = filter !== 'all' && row.dataset.activity !== filter;
+      });
+    });
   });
 </script>
 {{- end }}
