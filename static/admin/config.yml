@@ -4,7 +4,7 @@ backend:
 
 local_backend: true
 
-media_folder: "static/images"
+media_folder: "assets/images"
 public_folder: "/images"
 output_format: toml
 extension: md
