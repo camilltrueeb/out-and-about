@@ -1,7 +1,7 @@
 baseURL = "https://mehuse.xyz/"
 languageCode = "de"
 defaultContentLanguage = "de"
-title = "Unterwegs"
+title = "Out And About"
 theme = "PaperMod"
 
 [params]
