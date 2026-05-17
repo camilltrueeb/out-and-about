@@ -8,6 +8,6 @@ theme = "PaperMod"
   mainSections = ["posts"]
 
 [[menus.main]]
-name = "Wunschliste"
-url = "/wishlist/"
+name = "Wohin"
+url = "/wohin/"
 weight = 10

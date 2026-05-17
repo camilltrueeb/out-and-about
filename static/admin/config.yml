@@ -11,35 +11,35 @@ extension: md
 
 collections:
   - name: "posts"
-    label: "Posts"
+    label: "Beiträge"
     folder: "content/posts"
     create: true
     slug: "{{slug}}"
     fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Date", name: "date", widget: "datetime" }
-      - label: "Cover"
+      - { label: "Titel", name: "title", widget: "string" }
+      - { label: "Datum", name: "date", widget: "datetime" }
+      - label: "Titelbild"
         name: "cover"
         widget: "object"
         required: false
         fields:
-          - { label: "Image", name: "image", widget: "image", required: false, hint: "Recommended: compress images to under 500KB" }
-          - { label: "Alt text", name: "alt", widget: "string", required: false }
-          - { label: "Caption", name: "caption", widget: "string", required: false }
-      - { label: "Body", name: "body", widget: "markdown" }
+          - { label: "Bild", name: "image", widget: "image", required: false }
+          - { label: "Bildtext", name: "alt", widget: "string", required: false }
+          - { label: "Bildunterschrift", name: "caption", widget: "string", required: false }
+      - { label: "Inhalt", name: "body", widget: "markdown" }
 
-  - name: "wishlist"
-    label: "Wishlist"
-    folder: "content/wishlist"
+  - name: "wohin"
+    label: "Wohin"
+    folder: "content/wohin"
     create: true
     slug: "{{slug}}"
     fields:
       - { label: "Name", name: "title", widget: "string" }
-      - label: "Type"
+      - label: "Art"
         name: "activity"
         widget: "select"
-        options: ["Hike", "Bicycle", "Canoe", "City", "Escape", "Travel", "Group"]
-      - { label: "Distance from Zürich (km)", name: "distance_km", widget: "number", required: false }
-      - { label: "Reference link", name: "reference", widget: "string", required: false }
-      - { label: "Picture", name: "image", widget: "image", required: false }
-      - { label: "Notes", name: "notes", widget: "text", required: false }
+        options: ["Wanderung", "Fahrrad", "Kanu", "Stadt", "Auszeit", "Reise", "Gruppe"]
+      - { label: "Distanz ab Zürich (km)", name: "distance_km", widget: "number", required: false }
+      - { label: "Referenz-Link", name: "reference", widget: "string", required: false }
+      - { label: "Bild", name: "image", widget: "image", required: false }
+      - { label: "Notizen", name: "notes", widget: "text", required: false }
