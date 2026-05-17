@@ -23,16 +23,16 @@
       <tr>
         <th></th>
         <th>Name</th>
-        <th>Type</th>
-        <th>Distance from Zürich</th>
+        <th class="wl-sortable" data-col="type">Type <span class="wl-sort-icon"></span></th>
+        <th class="wl-sortable" data-col="distance">Distance from Zürich <span class="wl-sort-icon"></span></th>
         <th>Link</th>
         <th>Notes</th>
-        <th>Visits</th>
+        <th class="wl-sortable" data-col="visits">Visits <span class="wl-sort-icon"></span></th>
       </tr>
     </thead>
     <tbody>
       {{- range sort .Pages "Params.distance_km" }}
-      <tr data-activity="{{ .Params.activity | lower }}">
+      <tr data-activity="{{ .Params.activity | lower }}" data-distance="{{ .Params.distance_km | default 0 }}">
         <td class="wishlist-img-cell">
           {{- with .Params.image }}
           {{- $assetPath := strings.TrimPrefix "/" . }}
@@ -110,6 +110,45 @@
       document.querySelectorAll('.wishlist tbody tr').forEach(row => {
         row.hidden = filter !== 'all' && row.dataset.activity !== filter;
       });
+    });
+  });
+
+  let sortCol = null, sortDir = 1;
+  const icons = { 0: '', 1: ' ↑', '-1': ' ↓' };
+
+  document.querySelectorAll('.wl-sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) {
+        sortDir = sortDir === 1 ? -1 : 0;
+      } else {
+        sortCol = col;
+        sortDir = 1;
+      }
+      if (sortDir === 0) sortCol = null;
+
+      document.querySelectorAll('.wl-sortable').forEach(h => {
+        h.querySelector('.wl-sort-icon').textContent =
+          h.dataset.col === sortCol ? (sortDir === 1 ? '↑' : '↓') : '';
+      });
+
+      const tbody = document.querySelector('.wishlist tbody');
+      const rows = [...tbody.querySelectorAll('tr')];
+
+      if (!sortCol) {
+        rows.sort((a, b) => +a.dataset.distance - +b.dataset.distance);
+      } else if (col === 'distance') {
+        rows.sort((a, b) => sortDir * (+a.dataset.distance - +b.dataset.distance));
+      } else if (col === 'type') {
+        rows.sort((a, b) => sortDir * a.dataset.activity.localeCompare(b.dataset.activity));
+      } else if (col === 'visits') {
+        rows.sort((a, b) => {
+          const av = parseInt(a.querySelector('.wl-count').textContent) || 0;
+          const bv = parseInt(b.querySelector('.wl-count').textContent) || 0;
+          return sortDir * (av - bv);
+        });
+      }
+      rows.forEach(r => tbody.appendChild(r));
     });
   });
 </script>
