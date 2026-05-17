@@ -1,7 +1,6 @@
 backend:
   name: git-gateway
   branch: main
-  proxy_url: http://localhost:8081/api/v1
 
 local_backend: true
 
@@ -19,5 +18,12 @@ collections:
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Date", name: "date", widget: "datetime" }
-      - { label: "Featured Image", name: "image", widget: "image", required: false, hint: "Recommended: compress images to under 500KB" }
+      - label: "Cover"
+        name: "cover"
+        widget: "object"
+        required: false
+        fields:
+          - { label: "Image", name: "image", widget: "image", required: false, hint: "Recommended: compress images to under 500KB" }
+          - { label: "Alt text", name: "alt", widget: "string", required: false }
+          - { label: "Caption", name: "caption", widget: "string", required: false }
       - { label: "Body", name: "body", widget: "markdown" }
