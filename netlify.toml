@@ -1,9 +1,17 @@
 [build]
-  command = "hugo -b $DEPLOY_PRIME_URL"
   publish = "public"
 
 [build.environment]
   HUGO_VERSION = "0.161.1"
+
+[context.production]
+  command = "hugo"
+
+[context.deploy-preview]
+  command = "hugo -b $DEPLOY_PRIME_URL"
+
+[context.branch-deploy]
+  command = "hugo -b $DEPLOY_PRIME_URL"
 
 [dev]
   command = "hugo server --disableLiveReload --appendPort=false --baseURL http://localhost:8888"
