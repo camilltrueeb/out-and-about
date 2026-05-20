@@ -8,8 +8,13 @@
   <button class="wl-filter active" data-filter="all">Alle</button>
   {{- $activities := slice }}
   {{- range .Pages }}
-    {{- with .Params.activity }}
-      {{- $activities = $activities | append . }}
+    {{- $a := .Params.activity }}
+    {{- if $a }}
+      {{- if strings.HasPrefix (printf "%T" $a) "[]" }}
+        {{- range $a }}{{- $activities = $activities | append . }}{{- end }}
+      {{- else }}
+        {{- $activities = $activities | append $a }}
+      {{- end }}
     {{- end }}
   {{- end }}
   {{- range ($activities | uniq | sort) }}
@@ -32,7 +37,16 @@
     </thead>
     <tbody>
       {{- range sort .Pages "Params.distance_km" }}
-      <tr data-activity="{{ .Params.activity | lower }}" data-distance="{{ .Params.distance_km | default 0 }}">
+      {{- $actVal := "" }}
+      {{- $acts := .Params.activity }}
+      {{- if $acts }}
+        {{- if strings.HasPrefix (printf "%T" $acts) "[]" }}
+          {{- $actVal = delimit (apply $acts "lower") " " }}
+        {{- else }}
+          {{- $actVal = lower $acts }}
+        {{- end }}
+      {{- end }}
+      <tr data-activity="{{ $actVal }}" data-distance="{{ .Params.distance_km | default 0 }}">
         <td class="wishlist-img-cell">
           {{- with .Params.image }}
           {{- $assetPath := strings.TrimPrefix "/" . }}
@@ -45,7 +59,18 @@
           {{- end }}
         </td>
         <td class="wishlist-name">{{ .Title }}</td>
-        <td><span class="wishlist-tag wishlist-tag--{{ .Params.activity | lower }}">{{ .Params.activity }}</span></td>
+        <td>
+          {{- $a := .Params.activity }}
+          {{- if $a }}
+            {{- if strings.HasPrefix (printf "%T" $a) "[]" }}
+              {{- range $i, $v := $a }}
+                <span class="wishlist-tag wishlist-tag--{{ $v | lower }}">{{ $v }}</span>
+              {{- end }}
+            {{- else }}
+              <span class="wishlist-tag wishlist-tag--{{ $a | lower }}">{{ $a }}</span>
+            {{- end }}
+          {{- end }}
+        </td>
         <td class="wishlist-distance">{{ with .Params.distance_km }}{{ . }} km{{ end }}</td>
         <td>{{- with .Params.reference }}<a href="{{ . }}" target="_blank" rel="noopener">↗</a>{{- end }}</td>
         <td class="wishlist-notes">{{ .Params.notes }}</td>
@@ -104,12 +129,38 @@
 
   document.querySelectorAll('.wl-filter').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.wl-filter').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       const filter = btn.dataset.filter;
-      document.querySelectorAll('.wishlist tbody tr').forEach(row => {
-        row.hidden = filter !== 'all' && row.dataset.activity !== filter;
-      });
+      
+      // If "all" is clicked, clear all others and show everything
+      if (filter === 'all') {
+        document.querySelectorAll('.wl-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.wishlist tbody tr').forEach(row => {
+          row.hidden = false;
+        });
+      } else {
+        // Remove "all" as active if it was
+        document.querySelector('.wl-filter[data-filter="all"]').classList.remove('active');
+        
+        // Toggle this filter
+        btn.classList.toggle('active');
+        
+        // Get all active filters
+        const activeFilters = Array.from(document.querySelectorAll('.wl-filter.active:not([data-filter="all"])')).map(b => b.dataset.filter);
+        
+        // If no filters selected, show all
+        if (activeFilters.length === 0) {
+          document.querySelectorAll('.wishlist tbody tr').forEach(row => {
+            row.hidden = false;
+          });
+        } else {
+          // Show rows that have at least one of the selected activities
+          document.querySelectorAll('.wishlist tbody tr').forEach(row => {
+            const activities = (row.dataset.activity || '').split(' ').filter(Boolean);
+            row.hidden = !activeFilters.some(filter => activities.includes(filter));
+          });
+        }
+      }
     });
   });
 

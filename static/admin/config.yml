@@ -36,6 +36,7 @@ collections:
       - label: "Type"
         name: "activity"
         widget: "select"
+        multiple: true
         options: ["Wandern", "Velo", "Wasser", "Stadt", "Zen", "Reise", "Social", "Zelten", "SAC"]
       - { label: "Distanz von ZH (km)", name: "distance_km", widget: "number", required: false }
       - { label: "Reference link", name: "reference", widget: "string", required: false }
