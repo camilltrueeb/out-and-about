@@ -80,6 +80,24 @@ decap-cms-media-library-cloudinary@^3.0.0
 
 ---
 
+### OpenRouteService
+
+**Role:** Calculates driving distance from Zürich to the start point of each wohin route. Called client-side; results are cached in `localStorage` so the API is only hit once per unique route start coordinate.
+
+| What | Value |
+|---|---|
+| Endpoint | `api.openrouteservice.org/v2/directions/driving-car` |
+| API key | Stored in `layouts/wohin/list.html` — visible in page source |
+
+The API key is a basic key (free tier). Restrict it to `mehuse.xyz` and `out-and-about.netlify.app` as allowed HTTP referrers in the ORS dashboard to prevent misuse.
+
+**Monitor:**
+- Requests (free tier: 2,000/day)
+
+Dashboard: openrouteservice.org → Dashboard → API Key usage
+
+---
+
 ### Swisstopo WMTS (map tiles)
 
 **Role:** Map tile layers shown in the interactive route map modal and in the CMS route-drawing widget.

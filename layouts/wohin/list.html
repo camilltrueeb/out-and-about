@@ -29,7 +29,7 @@
         <th></th>
         <th>Name</th>
         <th class="wl-sortable" data-col="type">Art <span class="wl-sort-icon"></span></th>
-        <th class="wl-sortable" data-col="distance">Distanz ab Zürich <span class="wl-sort-icon"></span></th>
+        <th>Auto ab Zürich</th>
         <th>Link</th>
         <th>Karte</th>
         <th>Notizen</th>
@@ -37,7 +37,7 @@
       </tr>
     </thead>
     <tbody>
-      {{- range sort .Pages "Params.distance_km" }}
+      {{- range sort .Pages "Title" }}
       {{- $actVal := "" }}
       {{- $acts := .Params.activity }}
       {{- if $acts }}
@@ -63,7 +63,7 @@
         {{- end }}
       {{- end }}
       {{- if ge $thumbIdx (len $gallery) }}{{- $thumbIdx = 0 }}{{- end }}
-      <tr data-activity="{{ $actVal }}" data-distance="{{ .Params.distance_km | default 0 }}" data-title="{{ .Title }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}" data-images="{{ $gallery | jsonify }}">
+      <tr data-activity="{{ $actVal }}" data-title="{{ .Title }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}" data-images="{{ $gallery | jsonify }}">
         <td class="wishlist-img-cell">
           {{- if $gallery }}
           <img src="{{ index $gallery $thumbIdx }}" alt="{{ .Title }}" class="wishlist-thumb">
@@ -82,7 +82,7 @@
             {{- end }}
           {{- end }}
         </td>
-        <td class="wishlist-distance">{{ with .Params.distance_km }}{{ . }} km{{ end }}</td>
+        <td class="wishlist-auto"></td>
         <td>
           {{- $refs := slice }}
           {{- with .Params.reference }}{{- $refs = $refs | append . }}{{- end }}
@@ -353,7 +353,6 @@
       L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
       setTimeout(() => map.invalidateSize(), 50);
 
-      // Drop-shadow on the overlay pane makes the route pop on any base layer
       map.getPanes().overlayPane.style.filter = 'drop-shadow(0 0 2px rgba(0,0,0,0.85))';
 
       const routeStyle = { color: '#a855f7', weight: 5, opacity: 1 };
@@ -440,9 +439,7 @@
       const rows = [...tbody.querySelectorAll('tr')];
 
       if (!sortCol) {
-        rows.sort((a, b) => +a.dataset.distance - +b.dataset.distance);
-      } else if (col === 'distance') {
-        rows.sort((a, b) => sortDir * (+a.dataset.distance - +b.dataset.distance));
+        rows.sort((a, b) => a.dataset.title.localeCompare(b.dataset.title));
       } else if (col === 'type') {
         rows.sort((a, b) => sortDir * a.dataset.activity.localeCompare(b.dataset.activity));
       } else if (col === 'visits') {
@@ -455,5 +452,79 @@
       rows.forEach(r => tbody.appendChild(r));
     });
   });
+
+  // Auto-calculate driving duration from Zürich via OpenRouteService
+  (function () {
+    const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1NDQ4NDY3MmM2NTRmZjFiZWZiMDY0NzM1NjFjNDg1IiwiaCI6Im11cm11cjY0In0=';
+    const ZH = '8.5403,47.3779'; // Zürich HB, lon,lat
+
+    // Returns [lon, lat] for ORS from the route's first coordinate
+    async function resolveCoord(row) {
+      const geoStr = row.dataset.geojson;
+      if (geoStr && geoStr.trim()) {
+        try {
+          const gj = JSON.parse(geoStr);
+          const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
+          for (const f of features) {
+            if (f.geometry?.type === 'LineString' && f.geometry.coordinates.length > 0)
+              return f.geometry.coordinates[0];
+          }
+        } catch (e) {}
+      }
+      const gpxPath = row.dataset.gpx;
+      if (gpxPath && gpxPath.trim()) {
+        try {
+          const xml = await fetch(gpxPath).then(r => r.text());
+          const doc = new DOMParser().parseFromString(xml, 'text/xml');
+          const pt = doc.querySelector('trkpt');
+          if (pt) return [parseFloat(pt.getAttribute('lon')), parseFloat(pt.getAttribute('lat'))];
+        } catch (e) {}
+      }
+      return null;
+    }
+
+    function formatDuration(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.round((seconds % 3600) / 60);
+      return h > 0 ? `${h}h ${m}min` : `${m}min`;
+    }
+
+    async function fetchORS(lon, lat) {
+      try {
+        const data = await fetch(
+          `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${ZH}&end=${lon},${lat}`
+        ).then(r => r.json());
+        const s = data?.features?.[0]?.properties?.summary;
+        if (!s) return null;
+        return { km: Math.round(s.distance / 1000), seconds: Math.round(s.duration) };
+      } catch (e) { return null; }
+    }
+
+    document.querySelectorAll('.wishlist tbody tr').forEach(async row => {
+      const coord = await resolveCoord(row);
+      if (!coord) return;
+      const [lon, lat] = coord;
+      const cacheKey = `ors2_${lon.toFixed(4)}_${lat.toFixed(4)}`;
+      const cell = row.querySelector('.wishlist-auto');
+      if (!cell) return;
+
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { km, seconds } = JSON.parse(cached);
+          cell.textContent = formatDuration(seconds);
+          row.dataset.distance = km;
+        } catch (e) {}
+        return;
+      }
+
+      const result = await fetchORS(lon, lat);
+      if (result) {
+        localStorage.setItem(cacheKey, JSON.stringify(result));
+        cell.textContent = formatDuration(result.seconds);
+        row.dataset.distance = result.km;
+      }
+    });
+  })();
 </script>
 {{- end }}
