@@ -75,7 +75,14 @@
           {{- end }}
         </td>
         <td class="wishlist-distance">{{ with .Params.distance_km }}{{ . }} km{{ end }}</td>
-        <td>{{- with .Params.reference }}<a href="{{ . }}" target="_blank" rel="noopener">↗</a>{{- end }}</td>
+        <td>
+          {{- $refs := slice }}
+          {{- with .Params.reference }}{{- $refs = $refs | append . }}{{- end }}
+          {{- with .Params.reference_2 }}{{- $refs = $refs | append . }}{{- end }}
+          {{- with .Params.reference_3 }}{{- $refs = $refs | append . }}{{- end }}
+          {{- $multi := gt (len $refs) 1 }}
+          {{- range $i, $url := $refs }}<a href="{{ $url }}" target="_blank" rel="noopener" style="margin-right:3px">↗{{- if $multi }}<sup>{{ add $i 1 }}</sup>{{- end }}</a>{{- end }}
+        </td>
         <td class="wishlist-map-cell">
           {{- if or .Params.gpx .Params.route_geojson }}
           <button class="wl-map-btn" title="Auf Karte anzeigen">
