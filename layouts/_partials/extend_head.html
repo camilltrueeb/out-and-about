@@ -193,6 +193,48 @@
   .wl-gallery-next:hover:not(:disabled) { background: rgba(0,0,0,0.8); }
 </style>
 
-{{- if .IsHome }}
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-{{- end }}
+<style>
+  #auth-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: var(--theme, #fff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #auth-gate-box {
+    text-align: center;
+    padding: 2rem;
+    max-width: 320px;
+  }
+  #auth-gate-box h2 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+  #auth-gate-box p  { color: var(--secondary); margin: 0 0 1.5rem; }
+  #auth-gate-login {
+    padding: 10px 28px;
+    border-radius: 8px;
+    background: var(--primary, #333);
+    color: var(--theme, #fff);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  #auth-gate-login:hover { opacity: 0.85; }
+  #auth-logout {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    font-size: 0.75rem;
+    color: var(--secondary);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    display: none;
+  }
+  #auth-logout:hover { color: var(--primary); border-color: var(--primary); }
+</style>

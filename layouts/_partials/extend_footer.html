@@ -1,0 +1,29 @@
+<div id="auth-gate">
+  <div id="auth-gate-box">
+    <h2>Out and About</h2>
+    <p>Bitte einloggen um fortzufahren.</p>
+    <button id="auth-gate-login" onclick="netlifyIdentity.open()">Einloggen</button>
+  </div>
+</div>
+
+<button id="auth-logout" onclick="netlifyIdentity.logout()">Ausloggen</button>
+
+<script>
+(function () {
+  var gate    = document.getElementById('auth-gate');
+  var logout  = document.getElementById('auth-logout');
+
+  // No gate in local development — Identity doesn't work there
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    gate.style.display = 'none';
+    return;
+  }
+
+  function show()  { gate.style.display = 'flex'; logout.style.display = 'none'; }
+  function hide()  { gate.style.display = 'none'; logout.style.display = 'block'; }
+
+  netlifyIdentity.on('init',   function (user) { user ? hide() : show(); });
+  netlifyIdentity.on('login',  function ()     { hide(); netlifyIdentity.close(); });
+  netlifyIdentity.on('logout', function ()     { show(); });
+}());
+</script>
