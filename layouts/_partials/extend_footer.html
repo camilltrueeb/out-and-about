@@ -1,29 +1,57 @@
-<div id="auth-gate">
-  <div id="auth-gate-box">
-    <h2>Out and About</h2>
-    <p>Bitte einloggen um fortzufahren.</p>
-    <button id="auth-gate-login" onclick="netlifyIdentity.open()">Einloggen</button>
-  </div>
-</div>
-
 <button id="auth-logout" onclick="netlifyIdentity.logout()">Ausloggen</button>
 
 <script>
 (function () {
-  var gate    = document.getElementById('auth-gate');
-  var logout  = document.getElementById('auth-logout');
+  var COOKIE_NAME = 'nf_jwt';
+  var MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+  var logout = document.getElementById('auth-logout');
 
-  // No gate in local development — Identity doesn't work there
+  // No auth management needed in local development
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    gate.style.display = 'none';
+    logout.style.display = 'none';
     return;
   }
 
-  function show()  { gate.style.display = 'flex'; logout.style.display = 'none'; }
-  function hide()  { gate.style.display = 'none'; logout.style.display = 'block'; }
+  function setJwtCookie(token) {
+    document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
+      '; path=/; max-age=' + MAX_AGE + '; SameSite=Strict';
+  }
 
-  netlifyIdentity.on('init',   function (user) { user ? hide() : show(); });
-  netlifyIdentity.on('login',  function ()     { hide(); netlifyIdentity.close(); });
-  netlifyIdentity.on('logout', function ()     { show(); });
+  function clearJwtCookie() {
+    document.cookie = COOKIE_NAME + '=; path=/; max-age=0';
+  }
+
+  netlifyIdentity.on('init', function (user) {
+    if (user && user.token && user.token.access_token) {
+      setJwtCookie(user.token.access_token);
+      logout.style.display = 'block';
+    } else {
+      // No valid session — edge function will have already redirected;
+      // this fires only if someone lands here without a cookie somehow.
+      clearJwtCookie();
+      location.replace('/login?redirect=' + encodeURIComponent(location.pathname + location.search));
+    }
+  });
+
+  netlifyIdentity.on('login', function (user) {
+    if (user && user.token && user.token.access_token) {
+      setJwtCookie(user.token.access_token);
+    }
+    logout.style.display = 'block';
+    netlifyIdentity.close();
+  });
+
+  netlifyIdentity.on('logout', function () {
+    clearJwtCookie();
+    logout.style.display = 'none';
+    location.replace('/login');
+  });
+
+  // Keep cookie fresh when Netlify Identity silently refreshes the token
+  netlifyIdentity.on('token', function (token) {
+    if (token && token.access_token) {
+      setJwtCookie(token.access_token);
+    }
+  });
 }());
 </script>

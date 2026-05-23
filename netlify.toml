@@ -16,3 +16,7 @@
 [dev]
   command = "hugo server --appendPort=false --baseURL http://localhost:8888"
   targetPort = 1313
+
+[[edge_functions]]
+  function = "auth-gate"
+  path = "/*"

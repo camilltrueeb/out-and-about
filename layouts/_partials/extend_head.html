@@ -195,33 +195,6 @@
 
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <style>
-  #auth-gate {
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: var(--theme, #fff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #auth-gate-box {
-    text-align: center;
-    padding: 2rem;
-    max-width: 320px;
-  }
-  #auth-gate-box h2 { margin: 0 0 0.5rem; font-size: 1.5rem; }
-  #auth-gate-box p  { color: var(--secondary); margin: 0 0 1.5rem; }
-  #auth-gate-login {
-    padding: 10px 28px;
-    border-radius: 8px;
-    background: var(--primary, #333);
-    color: var(--theme, #fff);
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    font-family: inherit;
-  }
-  #auth-gate-login:hover { opacity: 0.85; }
   #auth-logout {
     position: fixed;
     bottom: 12px;
