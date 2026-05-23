@@ -31,6 +31,7 @@
         <th class="wl-sortable" data-col="type">Art <span class="wl-sort-icon"></span></th>
         <th class="wl-sortable" data-col="distance">Distanz ab Zürich <span class="wl-sort-icon"></span></th>
         <th>Link</th>
+        <th>Karte</th>
         <th>Notizen</th>
         <th class="wl-sortable" data-col="visits">Besuche <span class="wl-sort-icon"></span></th>
       </tr>
@@ -41,12 +42,14 @@
       {{- $acts := .Params.activity }}
       {{- if $acts }}
         {{- if strings.HasPrefix (printf "%T" $acts) "[]" }}
-          {{- $actVal = delimit (apply $acts "lower") " " }}
+          {{- $parts := slice }}
+          {{- range $acts }}{{- $parts = $parts | append (. | lower) }}{{- end }}
+          {{- $actVal = delimit $parts " " }}
         {{- else }}
           {{- $actVal = lower $acts }}
         {{- end }}
       {{- end }}
-      <tr data-activity="{{ $actVal }}" data-distance="{{ .Params.distance_km | default 0 }}">
+      <tr data-activity="{{ $actVal }}" data-distance="{{ .Params.distance_km | default 0 }}" data-title="{{ .Title }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}">
         <td class="wishlist-img-cell">
           {{- with .Params.image }}
           {{- $assetPath := strings.TrimPrefix "/" . }}
@@ -73,6 +76,34 @@
         </td>
         <td class="wishlist-distance">{{ with .Params.distance_km }}{{ . }} km{{ end }}</td>
         <td>{{- with .Params.reference }}<a href="{{ . }}" target="_blank" rel="noopener">↗</a>{{- end }}</td>
+        <td class="wishlist-map-cell">
+          {{- if or .Params.gpx .Params.route_geojson }}
+          <button class="wl-map-btn" title="Auf Karte anzeigen">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+              <line x1="9" y1="3" x2="9" y2="18"/>
+              <line x1="15" y1="6" x2="15" y2="21"/>
+            </svg>
+          </button>
+          {{- end }}
+          {{- if .Params.gpx }}
+          <a href="{{ .Params.gpx | absURL }}" download class="wl-gpx-btn" title="GPX herunterladen">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </a>
+          {{- else if .Params.route_geojson }}
+          <button class="wl-gpx-btn" title="GPX herunterladen">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+          </button>
+          {{- end }}
+        </td>
         <td class="wishlist-notes">{{ .Params.notes }}</td>
         <td class="wishlist-visits" data-slug="{{ .Title | urlize }}">
           <button class="wl-dec" title="Besuch entfernen">−</button>
@@ -87,6 +118,16 @@
 
 <dialog id="wl-lb" onclick="this.close()">
   <img id="wl-lb-img" src="" alt="">
+</dialog>
+
+<dialog id="wl-map-modal">
+  <div class="wl-map-inner">
+    <div class="wl-map-header">
+      <strong id="wl-map-title"></strong>
+      <button class="wl-map-close" onclick="document.getElementById('wl-map-modal').close()" aria-label="Schliessen">✕</button>
+    </div>
+    <div id="wl-map-el"></div>
+  </div>
 </dialog>
 
 <script>
@@ -163,6 +204,135 @@
       }
     });
   });
+
+  // Map functionality
+  (function() {
+    let leafletLoaded = false;
+    let currentMap = null;
+
+    function loadScript(src) {
+      return new Promise(resolve => {
+        if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        document.head.appendChild(s);
+      });
+    }
+
+    function loadCSS(href) {
+      if (!document.querySelector('link[href="' + href + '"]')) {
+        const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
+        document.head.appendChild(l);
+      }
+    }
+
+    async function ensureLeaflet() {
+      if (leafletLoaded) return;
+      loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+      await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+      await loadScript('https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/gpx.min.js');
+      leafletLoaded = true;
+    }
+
+    async function openMap(title, gpxPath, geojsonStr) {
+      const modal = document.getElementById('wl-map-modal');
+      document.getElementById('wl-map-title').textContent = title;
+      modal.showModal();
+
+      await ensureLeaflet();
+
+      const mapEl = document.getElementById('wl-map-el');
+      if (currentMap) { currentMap.remove(); currentMap = null; mapEl.innerHTML = ''; }
+
+      const L = window.L;
+      const attrib = '&copy; <a href="https://www.swisstopo.admin.ch" target="_blank">swisstopo</a>';
+      const wmts = id => L.tileLayer(
+        `https://wmts.geo.admin.ch/1.0.0/${id}/default/current/3857/{z}/{x}/{y}.jpeg`,
+        { attribution: attrib, maxZoom: 18 }
+      );
+      const baseLayers = {
+        'Landeskarte': wmts('ch.swisstopo.pixelkarte-farbe'),
+        'Luftbild':    wmts('ch.swisstopo.swissimage'),
+        'Karte grau':  wmts('ch.swisstopo.pixelkarte-grau'),
+      };
+      const ovlay = id => L.tileLayer(
+        `https://wmts.geo.admin.ch/1.0.0/${id}/default/current/3857/{z}/{x}/{y}.png`,
+        { attribution: attrib, maxZoom: 18, opacity: 0.9 }
+      );
+      const overlays = {
+        'Wanderwege': ovlay('ch.astra.wanderland'),
+        'Veloland':   ovlay('ch.astra.veloland'),
+      };
+
+      const map = L.map(mapEl, { layers: [baseLayers['Landeskarte']] }).setView([46.8, 8.2], 8);
+      currentMap = map;
+      L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
+      setTimeout(() => map.invalidateSize(), 50);
+
+      // Drop-shadow on the overlay pane makes the route pop on any base layer
+      map.getPanes().overlayPane.style.filter = 'drop-shadow(0 0 2px rgba(0,0,0,0.85))';
+
+      const routeStyle = { color: '#a855f7', weight: 5, opacity: 1 };
+
+      if (gpxPath) {
+        new L.GPX(gpxPath, {
+          async: true,
+          polyline_options: routeStyle,
+          marker_options: { startIconUrl: '', endIconUrl: '', shadowUrl: '' }
+        }).on('loaded', function(e) {
+          map.fitBounds(e.target.getBounds(), { padding: [20, 20] });
+        }).addTo(map);
+      } else if (geojsonStr) {
+        try {
+          const layer = L.geoJSON(JSON.parse(geojsonStr), { style: routeStyle }).addTo(map);
+          if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+        } catch (e) { /* ignore invalid geojson */ }
+      }
+    }
+
+    document.querySelectorAll('.wl-map-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('tr');
+        openMap(row.dataset.title, row.dataset.gpx, row.dataset.geojson);
+      });
+    });
+
+    document.getElementById('wl-map-modal').addEventListener('click', function(e) {
+      if (e.target === this) this.close();
+    });
+
+    // GPX download for drawn routes (GeoJSON → GPX on the fly)
+    function generateGpx(title, geojsonStr) {
+      try {
+        const gj = JSON.parse(geojsonStr);
+        const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
+        const trkpts = features
+          .filter(f => f.geometry && f.geometry.type === 'LineString')
+          .flatMap(f => f.geometry.coordinates)
+          .map(([lon, lat, ele]) =>
+            `    <trkpt lat="${lat.toFixed(6)}" lon="${lon.toFixed(6)}">${ele != null ? `<ele>${ele.toFixed(1)}</ele>` : ''}</trkpt>`
+          ).join('\n');
+        const safe = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Out and About" xmlns="http://www.topografix.com/GPX/1/1">\n  <trk><name>${safe(title)}</name><trkseg>\n${trkpts}\n  </trkseg></trk>\n</gpx>`;
+        const a = Object.assign(document.createElement('a'), {
+          href: URL.createObjectURL(new Blob([gpx], { type: 'application/gpx+xml' })),
+          download: title.toLowerCase().replace(/\s+/g, '-') + '.gpx'
+        });
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      } catch (e) { console.error('GPX generation failed', e); }
+    }
+
+    document.querySelectorAll('button.wl-gpx-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('tr');
+        generateGpx(row.dataset.title, row.dataset.geojson);
+      });
+    });
+  })();
 
   let sortCol = null, sortDir = 1;
   const icons = { 0: '', 1: ' ↑', '-1': ' ↓' };

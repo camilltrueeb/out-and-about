@@ -1,3 +1,5 @@
+local_backend: true
+
 backend:
   name: git-gateway
   branch: staging
@@ -41,4 +43,16 @@ collections:
       - { label: "Distanz von ZH (km)", name: "distance_km", widget: "number", required: false }
       - { label: "Reference link", name: "reference", widget: "string", required: false }
       - { label: "Picture", name: "image", widget: "image", required: false, hint: "JPEG or PNG only — HEIC from Apple Photos is not supported. Export as JPEG first." }
+      - label: "GPX Route"
+        name: "gpx"
+        widget: "file"
+        required: false
+        media_folder: "/static/gpx"
+        public_folder: "/gpx"
+        hint: "Upload a .gpx route file (optional)"
+      - label: "Route zeichnen"
+        name: "route_geojson"
+        widget: "route-drawer"
+        required: false
+        hint: "Route auf der Karte zeichnen (alternativ zu GPX)"
       - { label: "Notes", name: "notes", widget: "text", required: false }

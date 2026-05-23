@@ -14,5 +14,5 @@
   command = "hugo -b $DEPLOY_PRIME_URL"
 
 [dev]
-  command = "hugo server --disableLiveReload --appendPort=false --baseURL http://localhost:8888"
+  command = "hugo server --appendPort=false --baseURL http://localhost:8888"
   targetPort = 1313
