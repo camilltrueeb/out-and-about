@@ -29,7 +29,7 @@
         <th></th>
         <th>Name</th>
         <th class="wl-sortable" data-col="type">Art <span class="wl-sort-icon"></span></th>
-        <th>Auto ab ZH</th>
+        <th class="wl-sortable" data-col="distance">Auto ab ZH <span class="wl-sort-icon"></span></th>
         <th>Link</th>
         <th>Karte</th>
         <th>Notizen</th>
@@ -447,6 +447,16 @@
           const av = parseInt(a.querySelector('.wl-count').textContent) || 0;
           const bv = parseInt(b.querySelector('.wl-count').textContent) || 0;
           return sortDir * (av - bv);
+        });
+      } else if (col === 'distance') {
+        rows.sort((a, b) => {
+          const ad = parseFloat(a.dataset.distance);
+          const bd = parseFloat(b.dataset.distance);
+          const aHas = !isNaN(ad), bHas = !isNaN(bd);
+          if (!aHas && !bHas) return 0;
+          if (!aHas) return 1;
+          if (!bHas) return -1;
+          return sortDir * (ad - bd);
         });
       }
       rows.forEach(r => tbody.appendChild(r));
