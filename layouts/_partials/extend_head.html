@@ -193,6 +193,21 @@
   .wl-gallery-next:hover:not(:disabled) { background: rgba(0,0,0,0.8); }
 </style>
 
-{{- if .IsHome }}
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
-{{- end }}
+<style>
+  #auth-logout {
+    position: fixed;
+    bottom: 12px;
+    right: 12px;
+    font-size: 0.75rem;
+    color: var(--secondary);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    display: none;
+  }
+  #auth-logout:hover { color: var(--primary); border-color: var(--primary); }
+</style>

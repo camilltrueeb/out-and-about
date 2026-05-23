@@ -1,0 +1,57 @@
+<button id="auth-logout" onclick="netlifyIdentity.logout()">Ausloggen</button>
+
+<script>
+(function () {
+  var COOKIE_NAME = 'nf_jwt';
+  var MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+  var logout = document.getElementById('auth-logout');
+
+  // No auth management needed in local development
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    logout.style.display = 'none';
+    return;
+  }
+
+  function setJwtCookie(token) {
+    document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
+      '; path=/; max-age=' + MAX_AGE + '; SameSite=Strict';
+  }
+
+  function clearJwtCookie() {
+    document.cookie = COOKIE_NAME + '=; path=/; max-age=0';
+  }
+
+  netlifyIdentity.on('init', function (user) {
+    if (user && user.token && user.token.access_token) {
+      setJwtCookie(user.token.access_token);
+      logout.style.display = 'block';
+    } else {
+      // No valid session — edge function will have already redirected;
+      // this fires only if someone lands here without a cookie somehow.
+      clearJwtCookie();
+      location.replace('/login?redirect=' + encodeURIComponent(location.pathname + location.search));
+    }
+  });
+
+  netlifyIdentity.on('login', function (user) {
+    if (user && user.token && user.token.access_token) {
+      setJwtCookie(user.token.access_token);
+    }
+    logout.style.display = 'block';
+    netlifyIdentity.close();
+  });
+
+  netlifyIdentity.on('logout', function () {
+    clearJwtCookie();
+    logout.style.display = 'none';
+    location.replace('/login');
+  });
+
+  // Keep cookie fresh when Netlify Identity silently refreshes the token
+  netlifyIdentity.on('token', function (token) {
+    if (token && token.access_token) {
+      setJwtCookie(token.access_token);
+    }
+  });
+}());
+</script>
