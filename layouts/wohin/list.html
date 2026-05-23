@@ -49,16 +49,24 @@
           {{- $actVal = lower $acts }}
         {{- end }}
       {{- end }}
-      <tr data-activity="{{ $actVal }}" data-distance="{{ .Params.distance_km | default 0 }}" data-title="{{ .Title }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}">
-        <td class="wishlist-img-cell">
-          {{- with .Params.image }}
-          {{- $assetPath := strings.TrimPrefix "/" . }}
-          {{- $img := resources.Get $assetPath }}
-          {{- if $img }}
-          <img src="{{ $img.Permalink }}" alt="{{ $.Title }}" class="wishlist-thumb" onclick="document.getElementById('wl-lb').showModal();document.getElementById('wl-lb-img').src=this.src">
+      {{- $gallery := slice }}
+      {{- $thumbIdx := 0 }}
+      {{- with .Params.gallery }}
+        {{- if eq (printf "%T" .) "string" }}
+          {{- $parsed := . | transform.Unmarshal }}
+          {{- if strings.HasPrefix (printf "%T" $parsed) "[]" }}
+            {{- $gallery = $parsed }}
           {{- else }}
-          <img src="{{ . | absURL }}" alt="{{ $.Title }}" class="wishlist-thumb" onclick="document.getElementById('wl-lb').showModal();document.getElementById('wl-lb-img').src=this.src">
+            {{- with index $parsed "urls" }}{{- $gallery = . }}{{- end }}
+            {{- $thumbIdx = index $parsed "thumb" | default 0 | int }}
           {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- if ge $thumbIdx (len $gallery) }}{{- $thumbIdx = 0 }}{{- end }}
+      <tr data-activity="{{ $actVal }}" data-distance="{{ .Params.distance_km | default 0 }}" data-title="{{ .Title }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}" data-images="{{ $gallery | jsonify }}">
+        <td class="wishlist-img-cell">
+          {{- if $gallery }}
+          <img src="{{ index $gallery $thumbIdx }}" alt="{{ .Title }}" class="wishlist-thumb">
           {{- end }}
         </td>
         <td class="wishlist-name">{{ .Title }}</td>
@@ -123,8 +131,13 @@
   </table>
 </div>
 
-<dialog id="wl-lb" onclick="this.close()">
-  <img id="wl-lb-img" src="" alt="">
+<dialog id="wl-gallery">
+  <div class="wl-gallery-inner">
+    <button class="wl-gallery-close" id="wl-gallery-close" aria-label="Schliessen">&#x2715;</button>
+    <button class="wl-gallery-prev" id="wl-gallery-prev" aria-label="Vorheriges Bild">&#8592;</button>
+    <button class="wl-gallery-next" id="wl-gallery-next" aria-label="N&#228;chstes Bild">&#8594;</button>
+    <div class="wl-gallery-wrap" id="wl-gallery-wrap"></div>
+  </div>
 </dialog>
 
 <dialog id="wl-map-modal">
@@ -138,9 +151,72 @@
 </dialog>
 
 <script>
-  document.querySelectorAll('.wishlist-thumb').forEach(img => {
-    img.style.cursor = 'zoom-in';
-  });
+  // Gallery
+  (function() {
+    let galleryImgs = [];
+    let currentIdx = 0;
+    const modal = document.getElementById('wl-gallery');
+    const wrap = document.getElementById('wl-gallery-wrap');
+    const prevBtn = document.getElementById('wl-gallery-prev');
+    const nextBtn = document.getElementById('wl-gallery-next');
+    const closeBtn = document.getElementById('wl-gallery-close');
+
+    function goTo(idx, smooth) {
+      currentIdx = Math.max(0, Math.min(idx, galleryImgs.length - 1));
+      const imgs = wrap.querySelectorAll('img');
+      if (imgs[currentIdx]) {
+        wrap.scrollTo({ left: imgs[currentIdx].offsetLeft, behavior: smooth ? 'smooth' : 'instant' });
+      }
+      prevBtn.disabled = currentIdx === 0;
+      nextBtn.disabled = currentIdx === galleryImgs.length - 1;
+    }
+
+    function openGallery(imgList, startIdx) {
+      galleryImgs = imgList;
+      wrap.innerHTML = '';
+      imgList.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = '';
+        wrap.appendChild(img);
+      });
+      modal.showModal();
+      requestAnimationFrame(() => goTo(startIdx || 0, false));
+    }
+
+    prevBtn.addEventListener('click', () => goTo(currentIdx - 1, true));
+    nextBtn.addEventListener('click', () => goTo(currentIdx + 1, true));
+    closeBtn.addEventListener('click', () => modal.close());
+    modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+
+    document.addEventListener('keydown', e => {
+      if (!modal.open) return;
+      if (e.key === 'ArrowLeft') goTo(currentIdx - 1, true);
+      if (e.key === 'ArrowRight') goTo(currentIdx + 1, true);
+      if (e.key === 'Escape') modal.close();
+    });
+
+    wrap.addEventListener('scroll', () => {
+      const imgs = wrap.querySelectorAll('img');
+      let closest = 0, minDist = Infinity;
+      imgs.forEach((img, i) => {
+        const dist = Math.abs(img.offsetLeft - wrap.scrollLeft);
+        if (dist < minDist) { minDist = dist; closest = i; }
+      });
+      currentIdx = closest;
+      prevBtn.disabled = currentIdx === 0;
+      nextBtn.disabled = currentIdx === galleryImgs.length - 1;
+    }, { passive: true });
+
+    document.querySelectorAll('.wishlist-thumb').forEach(img => {
+      img.style.cursor = 'zoom-in';
+      img.addEventListener('click', () => {
+        const row = img.closest('tr');
+        const imgs = JSON.parse(row.dataset.images || '[]');
+        openGallery(imgs.length > 0 ? imgs : [img.src], 0);
+      });
+    });
+  })();
 
   // Load visit counts
   document.querySelectorAll('.wishlist-visits').forEach(async cell => {
