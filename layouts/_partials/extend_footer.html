@@ -12,6 +12,10 @@
     return;
   }
 
+  // If the edge function let us reach this page, the user is authenticated.
+  // Show the logout button immediately — don't wait for the Identity widget.
+  logout.style.display = 'block';
+
   function setJwtCookie(token) {
     document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
       '; path=/; max-age=' + MAX_AGE + '; SameSite=Strict';
@@ -21,15 +25,11 @@
     document.cookie = COOKIE_NAME + '=; path=/; max-age=0';
   }
 
+  // Refresh the cookie whenever Identity has a fresh token, but never
+  // redirect here — the edge function is the sole gatekeeper.
   netlifyIdentity.on('init', function (user) {
     if (user && user.token && user.token.access_token) {
       setJwtCookie(user.token.access_token);
-      logout.style.display = 'block';
-    } else {
-      // No valid session — edge function will have already redirected;
-      // this fires only if someone lands here without a cookie somehow.
-      clearJwtCookie();
-      location.replace('/login?redirect=' + encodeURIComponent(location.pathname + location.search));
     }
   });
 
@@ -37,7 +37,6 @@
     if (user && user.token && user.token.access_token) {
       setJwtCookie(user.token.access_token);
     }
-    logout.style.display = 'block';
     netlifyIdentity.close();
   });
 
