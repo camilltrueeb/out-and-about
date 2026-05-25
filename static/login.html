@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Out and About – Einloggen</title>
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -16,12 +15,7 @@
       justify-content: center;
       min-height: 100dvh;
     }
-    .box {
-      text-align: center;
-      padding: 2rem;
-      max-width: 320px;
-      width: 100%;
-    }
+    .box { text-align: center; padding: 2rem; max-width: 320px; width: 100%; }
     h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
     p { color: #666; margin-bottom: 1.5rem; font-size: 0.95rem; }
     button {
@@ -35,6 +29,7 @@
       font-family: inherit;
     }
     button:hover { opacity: 0.85; }
+    button:disabled { opacity: 0.45; cursor: default; }
   </style>
 </head>
 <body>
@@ -43,18 +38,27 @@
     <p>Bitte einloggen um fortzufahren.</p>
     <button id="login-btn">Einloggen</button>
   </div>
+
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
   (function () {
-    var COOKIE_NAME = 'nf_jwt';
-    var MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+    var COOKIE_NAME = 'auth_token';
+    var btn = document.getElementById('login-btn');
 
-    function setJwtCookie(token) {
-      document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
-        '; path=/; max-age=' + MAX_AGE + '; SameSite=Strict';
+    function jwtExp(token) {
+      try {
+        var b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4))).exp || 0;
+      } catch (e) {
+        console.error('[login] failed to parse JWT exp:', e.message);
+        return 0;
+      }
     }
 
-    function clearJwtCookie() {
-      document.cookie = COOKIE_NAME + '=; path=/; max-age=0';
+    function setJwtCookie(token) {
+      var maxAge = Math.max(60, jwtExp(token) - Math.floor(Date.now() / 1000));
+      document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
+        '; path=/; max-age=' + maxAge + '; SameSite=Strict';
     }
 
     function getRedirectTarget() {
@@ -64,22 +68,43 @@
       return target;
     }
 
+    netlifyIdentity.on('error', function (e) {
+      console.error('[login] identity error:', e);
+    });
+
     netlifyIdentity.on('init', function (user) {
-      if (user && user.token && user.token.access_token) {
-        setJwtCookie(user.token.access_token);
+      if (!user) return;
+      user.jwt().then(function (freshToken) {
+        setJwtCookie(freshToken);
         location.replace(getRedirectTarget());
-      }
+      }).catch(function (e) {
+        console.error('[login] token refresh failed:', e && e.message);
+        netlifyIdentity.logout();
+      });
     });
 
     netlifyIdentity.on('login', function (user) {
-      if (user && user.token && user.token.access_token) {
-        setJwtCookie(user.token.access_token);
+      var token = user && user.token && user.token.access_token;
+      if (!token) {
+        console.error('[login] login event: no access_token on user');
+        return;
       }
+      if (jwtExp(token) * 1000 <= Date.now()) {
+        console.error('[login] login event: token already expired');
+        return;
+      }
+      setJwtCookie(token);
       netlifyIdentity.close();
       location.replace(getRedirectTarget());
     });
 
-    document.getElementById('login-btn').addEventListener('click', function () {
+    try {
+      netlifyIdentity.init();
+    } catch (e) {
+      console.error('[login] netlifyIdentity.init() threw:', e.message);
+    }
+
+    btn.addEventListener('click', function () {
       netlifyIdentity.open();
     });
   }());

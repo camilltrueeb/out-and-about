@@ -14,6 +14,30 @@ Open `localhost:8888` for the site, `localhost:8888/admin` for the CMS.
 
 ---
 
+## Authentication
+
+The entire site is protected by a Netlify Edge Function (`netlify/edge-functions/auth-gate.js`) that runs before every request.
+
+**Stack:** [Netlify Identity](https://docs.netlify.com/security/secure-access-to-sites/identity/) (GoTrue) for user management + login UI, edge function for gating.
+
+**How it works:**
+
+1. **Edge function (gatekeeper):** Reads the `auth_token` cookie and calls `https://mehuse.xyz/.netlify/identity/user` with it as a Bearer token. GoTrue returns 200 if valid, 401 if expired or invalid. Static assets, `/login`, and `/.netlify/*` paths pass through without a check. Unauthenticated requests get a `302 → /login?redirect=<path>` with `Cache-Control: no-store`.
+
+2. **Login page (`/login.html`):** Uses the [netlify-identity-widget](https://github.com/netlify/netlify-identity-widget) (loaded from CDN). On `init`, if a stored session exists the widget silently refreshes the token and the page redirects immediately. On `login`, the JWT access token is stored in the `auth_token` cookie with `max-age` matching the token's `exp` claim.
+
+3. **Footer (every page):** The widget's `init`, `login`, and `token` events keep `auth_token` fresh as GoTrue renews tokens in the background. The logout button clears the cookie and redirects to `/login`. Access tokens expire after ~1 hour; refresh tokens after ~7 days.
+
+**GoTrue / Netlify Identity setup:**
+
+- Enable Identity in the Netlify dashboard → **Identity** tab
+- Invite users via the dashboard (signup is disabled)
+- No installation: the widget is loaded from `https://identity.netlify.com/v1/netlify-identity-widget.js`
+- The GoTrue API is served automatically at `https://<your-site>/.netlify/identity`
+- Local dev: the widget shows a one-time dialog asking for the site URL (`https://mehuse.xyz`); this is stored in `localStorage` for subsequent runs
+
+---
+
 ## External services
 
 ### Netlify
