@@ -14,7 +14,8 @@
   command = "hugo -b $DEPLOY_PRIME_URL"
 
 [dev]
-  command = "hugo server --appendPort=false --baseURL http://localhost:8888"
+  command = "hugo server -D --baseURL http://localhost:8888 --appendPort=false"
+  port = 8888
   targetPort = 1313
 
 [[edge_functions]]

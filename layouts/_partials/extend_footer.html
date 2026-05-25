@@ -2,55 +2,51 @@
 
 <script>
 (function () {
-  var COOKIE_NAME = 'nf_jwt';
-  var MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+  var COOKIE_NAME = 'auth_token';
   var logout = document.getElementById('auth-logout');
 
-  // No auth management needed in local development
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    logout.style.display = 'none';
-    return;
-  }
-
-  // If the edge function let us reach this page, the user is authenticated.
-  // Show the logout button immediately — don't wait for the Identity widget.
   logout.style.display = 'block';
 
-  function setJwtCookie(token) {
-    document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
-      '; path=/; max-age=' + MAX_AGE + '; SameSite=Strict';
-  }
-
-  function clearJwtCookie() {
-    document.cookie = COOKIE_NAME + '=; path=/; max-age=0';
-  }
-
-  // Refresh the cookie whenever Identity has a fresh token, but never
-  // redirect here — the edge function is the sole gatekeeper.
-  netlifyIdentity.on('init', function (user) {
-    if (user && user.token && user.token.access_token) {
-      setJwtCookie(user.token.access_token);
+  function jwtExp(token) {
+    try {
+      var b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+      return JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4))).exp || 0;
+    } catch (e) {
+      console.error('[footer] failed to parse JWT exp:', e.message);
+      return 0;
     }
+  }
+
+  function setJwtCookie(token) {
+    var maxAge = Math.max(60, jwtExp(token) - Math.floor(Date.now() / 1000));
+    document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
+      '; path=/; max-age=' + maxAge + '; SameSite=Strict';
+  }
+
+  netlifyIdentity.on('error', function (e) {
+    console.error('[footer] identity error:', e);
+  });
+
+  netlifyIdentity.on('init', function (user) {
+    if (!user) return;
+    if (!user.token) { console.error('[footer] init: user present but no token'); return; }
+    setJwtCookie(user.token.access_token);
   });
 
   netlifyIdentity.on('login', function (user) {
-    if (user && user.token && user.token.access_token) {
-      setJwtCookie(user.token.access_token);
-    }
+    if (!user || !user.token) { console.error('[footer] login: no token on user'); return; }
+    setJwtCookie(user.token.access_token);
     netlifyIdentity.close();
   });
 
-  netlifyIdentity.on('logout', function () {
-    clearJwtCookie();
-    logout.style.display = 'none';
-    location.replace('/login');
+  netlifyIdentity.on('token', function (token) {
+    if (!token || !token.access_token) { console.error('[footer] token event: no access_token'); return; }
+    setJwtCookie(token.access_token);
   });
 
-  // Keep cookie fresh when Netlify Identity silently refreshes the token
-  netlifyIdentity.on('token', function (token) {
-    if (token && token.access_token) {
-      setJwtCookie(token.access_token);
-    }
+  netlifyIdentity.on('logout', function () {
+    document.cookie = COOKIE_NAME + '=; path=/; max-age=0';
+    location.replace('/login');
   });
 }());
 </script>
