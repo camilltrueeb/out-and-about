@@ -16,6 +16,7 @@ export default async (request, context) => {
   }
 
   const cookieHeader = request.headers.get('cookie') || '';
+  console.log('[auth-gate] cookies:', cookieHeader);
   const match = cookieHeader.match(/(?:^|;\s*)auth_token=([^;]+)/);
   const token = match ? decodeURIComponent(match[1]) : null;
 
