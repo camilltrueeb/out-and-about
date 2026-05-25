@@ -42,24 +42,7 @@
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
   (function () {
-    var COOKIE_NAME = 'auth_token';
     var btn = document.getElementById('login-btn');
-
-    function jwtExp(token) {
-      try {
-        var b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        return JSON.parse(atob(b64 + '='.repeat((4 - b64.length % 4) % 4))).exp || 0;
-      } catch (e) {
-        console.error('[login] failed to parse JWT exp:', e.message);
-        return 0;
-      }
-    }
-
-    function setJwtCookie(token) {
-      var maxAge = Math.max(60, jwtExp(token) - Math.floor(Date.now() / 1000));
-      document.cookie = COOKIE_NAME + '=' + encodeURIComponent(token) +
-        '; path=/; max-age=' + maxAge + '; SameSite=Strict';
-    }
 
     function getRedirectTarget() {
       var params = new URLSearchParams(location.search);
@@ -74,26 +57,10 @@
 
     netlifyIdentity.on('init', function (user) {
       if (!user) return;
-      user.jwt().then(function (freshToken) {
-        setJwtCookie(freshToken);
-        location.replace(getRedirectTarget());
-      }).catch(function (e) {
-        console.error('[login] token refresh failed:', e && e.message);
-        netlifyIdentity.logout();
-      });
+      location.replace(getRedirectTarget());
     });
 
-    netlifyIdentity.on('login', function (user) {
-      var token = user && user.token && user.token.access_token;
-      if (!token) {
-        console.error('[login] login event: no access_token on user');
-        return;
-      }
-      if (jwtExp(token) * 1000 <= Date.now()) {
-        console.error('[login] login event: token already expired');
-        return;
-      }
-      setJwtCookie(token);
+    netlifyIdentity.on('login', function () {
       netlifyIdentity.close();
       location.replace(getRedirectTarget());
     });

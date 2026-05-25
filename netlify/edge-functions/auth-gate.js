@@ -15,30 +15,28 @@ export default async (request, context) => {
     return context.next();
   }
 
+  // Skip auth gate in local dev — nf_jwt is only set by Netlify's CDN
+  if (Netlify.env.get('NETLIFY_DEV')) {
+    return context.next();
+  }
+
   const cookieHeader = request.headers.get('cookie') || '';
-  console.log('[auth-gate] cookies:', cookieHeader);
-  const match = cookieHeader.match(/(?:^|;\s*)auth_token=([^;]+)/);
+  const match = cookieHeader.match(/(?:^|;\s*)nf_jwt=([^;]+)/);
   const token = match ? decodeURIComponent(match[1]) : null;
 
   if (token && await validateToken(token)) {
     return context.next();
   }
 
-  console.log('[auth-gate] redirecting to login', { pathname, reason: token ? 'invalid token' : 'no cookie' });
-  return loginRedirect(url, pathname);
-};
-
-function loginRedirect(url, pathname) {
   const redirectTo = encodeURIComponent(pathname + url.search);
   return new Response(null, {
     status: 302,
     headers: {
       'Location': `${url.origin}/login?redirect=${redirectTo}`,
       'Cache-Control': 'no-store',
-      'Set-Cookie': 'auth_token=; Path=/; Max-Age=0; SameSite=Strict',
     },
   });
-}
+};
 
 async function validateToken(token) {
   let resp;
