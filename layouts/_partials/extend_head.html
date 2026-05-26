@@ -23,7 +23,24 @@
   .wl-filter.active { background: var(--primary); color: var(--theme); border-color: var(--primary); }
   .wl-filter-sprite { display: inline-flex; align-items: center; }
   .wl-filter-sprite svg { width: 14px; height: 14px; image-rendering: pixelated; image-rendering: crisp-edges; }
-  .tag-icon { width: 18px; height: 18px; shape-rendering: crispEdges; image-rendering: pixelated; image-rendering: crisp-edges; }
+  .tag-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    background-image: url('/icons/icons.png');
+    background-repeat: no-repeat;
+  }
+  .tag-icon--wandern { background-size: 183px 122px; background-position: -18px  -34px; }
+  .tag-icon--velo    { background-size: 128px  85px; background-position: -33px  -21px; }
+  .tag-icon--wasser  { background-size: 186px 124px; background-position: -86px  -34px; }
+  .tag-icon--stadt   { background-size: 171px 114px; background-position:-110px  -30px; }
+  .tag-icon--zen     { background-size: 190px 126px; background-position:-156px  -36px; }
+  .tag-icon--reise   { background-size: 168px 112px; background-position: -16px  -61px; }
+  .tag-icon--social  { background-size: 118px  78px; background-position: -30px  -40px; }
+  .tag-icon--zelten  { background-size: 173px 115px; background-position: -80px  -63px; }
+  .tag-icon--sac     { background-size: 162px 108px; background-position:-102px  -58px; }
+  .tag-icon--pilz    { background-size: 165px 110px; background-position:-134px  -59px; }
 
   /* Sortable column headers */
   .wl-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
