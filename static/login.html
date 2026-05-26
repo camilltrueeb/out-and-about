@@ -57,7 +57,10 @@
 
     netlifyIdentity.on('init', function (user) {
       if (!user) return;
-      location.replace(getRedirectTarget());
+      // If we're on the login page, nf_jwt is likely expired (auth-gate redirected us here).
+      // Auto-redirecting would loop because the CDN cookie is still stale.
+      // Force logout so the user gets a fresh nf_jwt on the next explicit login.
+      netlifyIdentity.logout();
     });
 
     netlifyIdentity.on('login', function () {
