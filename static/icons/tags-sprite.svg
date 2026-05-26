@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+
+  <!-- PILZE -->
+  <symbol id="pilze" viewBox="0 0 16 16">
+    <rect x="4" y="2" width="8" height="1" fill="#E65A4F"/>
+    <rect x="3" y="3" width="10" height="2" fill="#E65A4F"/>
+    <rect x="4" y="4" width="1" height="1" fill="#FFF2D8"/>
+    <rect x="7" y="4" width="1" height="1" fill="#FFF2D8"/>
+    <rect x="10" y="4" width="1" height="1" fill="#FFF2D8"/>
+    <rect x="6" y="5" width="4" height="1" fill="#F4D9C3"/>
+    <rect x="6" y="6" width="1" height="3" fill="#F1D9A5"/>
+    <rect x="8" y="6" width="1" height="3" fill="#F1D9A5"/>
+    <rect x="3" y="3" width="10" height="1" fill="#2D1F17"/>
+    <rect x="3" y="5" width="10" height="1" fill="#2D1F17"/>
+  </symbol>
+
+  <!-- WANDERN -->
+  <symbol id="wandern" viewBox="0 0 16 16">
+    <rect x="4" y="3" width="4" height="2" fill="#9B6A3B"/>
+    <rect x="3" y="5" width="6" height="3" fill="#B57A42"/>
+    <rect x="8" y="7" width="3" height="2" fill="#7A5230"/>
+    <rect x="2" y="8" width="9" height="2" fill="#4B3424"/>
+    <rect x="2" y="10" width="10" height="1" fill="#2D1F17"/>
+  </symbol>
+
+  <!-- VELO -->
+  <symbol id="velo" viewBox="0 0 16 16">
+    <rect x="2" y="9" width="3" height="3" fill="#2D1F17"/>
+    <rect x="10" y="9" width="3" height="3" fill="#2D1F17"/>
+    <rect x="5" y="7" width="2" height="1" fill="#3C74C9"/>
+    <rect x="6" y="8" width="2" height="1" fill="#3C74C9"/>
+    <rect x="8" y="6" width="1" height="3" fill="#3C74C9"/>
+    <rect x="8" y="8" width="2" height="1" fill="#3C74C9"/>
+  </symbol>
+
+  <!-- WASSER -->
+  <symbol id="wasser" viewBox="0 0 16 16">
+    <rect x="7" y="2" width="2" height="1" fill="#79C8FF"/>
+    <rect x="6" y="3" width="4" height="2" fill="#79C8FF"/>
+    <rect x="5" y="5" width="6" height="3" fill="#57A9F3"/>
+    <rect x="6" y="8" width="4" height="2" fill="#3A88D6"/>
+    <rect x="6" y="3" width="1" height="6" fill="#2D1F17"/>
+    <rect x="9" y="3" width="1" height="6" fill="#2D1F17"/>
+  </symbol>
+
+  <!-- STADT -->
+  <symbol id="stadt" viewBox="0 0 16 16">
+    <rect x="3" y="5" width="3" height="6" fill="#8B96A6"/>
+    <rect x="7" y="3" width="3" height="8" fill="#A3ACB9"/>
+    <rect x="11" y="6" width="2" height="5" fill="#737C8A"/>
+    <rect x="4" y="6" width="1" height="1" fill="#FFF2A0"/>
+    <rect x="8" y="5" width="1" height="1" fill="#FFF2A0"/>
+    <rect x="3" y="11" width="10" height="1" fill="#2D1F17"/>
+  </symbol>
+
+  <!-- ZEN -->
+  <symbol id="zen" viewBox="0 0 16 16">
+    <rect x="5" y="9" width="6" height="2" fill="#7E858B"/>
+    <rect x="6" y="7" width="4" height="2" fill="#9BA3A9"/>
+    <rect x="7" y="4" width="2" height="2" fill="#B7BDC2"/>
+  </symbol>
+
+  <!-- REISE -->
+  <symbol id="reise" viewBox="0 0 16 16">
+    <rect x="6" y="2" width="4" height="1" fill="#D9A24F"/>
+    <rect x="4" y="4" width="8" height="8" fill="#D9A24F"/>
+    <rect x="7" y="5" width="2" height="6" fill="#8A5A2D"/>
+    <rect x="4" y="4" width="8" height="1" fill="#2D1F17"/>
+    <rect x="4" y="11" width="8" height="1" fill="#2D1F17"/>
+  </symbol>
+
+  <!-- SOCIAL -->
+  <symbol id="social" viewBox="0 0 16 16">
+    <rect x="3" y="4" width="2" height="2" fill="#F4D9C3"/>
+    <rect x="7" y="3" width="2" height="2" fill="#F4D9C3"/>
+    <rect x="11" y="4" width="2" height="2" fill="#F4D9C3"/>
+    <rect x="2" y="7" width="4" height="2" fill="#7AB6FF"/>
+    <rect x="6" y="6" width="4" height="2" fill="#93C7FF"/>
+    <rect x="10" y="7" width="4" height="2" fill="#7AB6FF"/>
+  </symbol>
+
+  <!-- ZELTEN -->
+  <symbol id="zelten" viewBox="0 0 16 16">
+    <rect x="7" y="3" width="1" height="1" fill="#E3A56B"/>
+    <rect x="5" y="5" width="2" height="4" fill="#F28E5C"/>
+    <rect x="7" y="4" width="4" height="5" fill="#F2A05C"/>
+    <rect x="5" y="9" width="6" height="1" fill="#2D1F17"/>
+  </symbol>
+
+  <!-- SAC -->
+  <symbol id="sac" viewBox="0 0 16 16">
+    <rect x="3" y="8" width="4" height="3" fill="#6C747C"/>
+    <rect x="6" y="5" width="4" height="6" fill="#8B949C"/>
+    <rect x="9" y="7" width="4" height="4" fill="#596068"/>
+    <rect x="6" y="5" width="1" height="1" fill="#FFFFFF"/>
+  </symbol>
+
+</svg>
