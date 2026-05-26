@@ -18,7 +18,7 @@
     {{- end }}
   {{- end }}
   {{- range ($activities | uniq | sort) }}
-  <button class="wl-filter" data-filter="{{ . | lower }}">{{ . }}</button>
+  <button class="wl-filter" data-filter="{{ . | lower }}"><span class="wl-filter-sprite">{{ partial "activity-sprite.html" . }}</span>{{ . }}</button>
   {{- end }}
 </div>
 
@@ -75,10 +75,10 @@
           {{- if $a }}
             {{- if strings.HasPrefix (printf "%T" $a) "[]" }}
               {{- range $i, $v := $a }}
-                <span class="wishlist-tag wishlist-tag--{{ $v | lower }}">{{ $v }}</span>
+                <span class="wishlist-tag wishlist-tag--{{ $v | lower }}" title="{{ $v }}">{{ partial "activity-sprite.html" $v }}</span>
               {{- end }}
             {{- else }}
-              <span class="wishlist-tag wishlist-tag--{{ $a | lower }}">{{ $a }}</span>
+              <span class="wishlist-tag wishlist-tag--{{ $a | lower }}" title="{{ $a }}">{{ partial "activity-sprite.html" $a }}</span>
             {{- end }}
           {{- end }}
         </td>

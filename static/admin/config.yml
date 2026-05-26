@@ -47,7 +47,7 @@ collections:
         name: "activity"
         widget: "select"
         multiple: true
-        options: ["Wandern", "Velo", "Wasser", "Stadt", "Zen", "Reise", "Social", "Zelten", "SAC"]
+        options: ["Wandern", "Velo", "Wasser", "Stadt", "Zen", "Reise", "Social", "Zelten", "SAC", "Pilze"]
       - { label: "Reference link", name: "reference", widget: "string", required: false }
       - { label: "Reference link 2", name: "reference_2", widget: "string", required: false }
       - { label: "Reference link 3", name: "reference_3", widget: "string", required: false }

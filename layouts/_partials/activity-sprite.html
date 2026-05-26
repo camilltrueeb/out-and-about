@@ -1,0 +1,108 @@
+{{- $act := . | lower -}}
+{{- if or (eq $act "wandern") (eq $act "sac") -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="6" y="0" width="4" height="2" fill="currentColor"/>
+  <rect x="4" y="2" width="8" height="2" fill="currentColor"/>
+  <rect x="2" y="4" width="12" height="2" fill="currentColor"/>
+  <rect x="0" y="6" width="16" height="4" fill="currentColor"/>
+</svg>
+{{- else if eq $act "wasser" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="6" y="0" width="4" height="2" fill="currentColor"/>
+  <rect x="4" y="2" width="8" height="2" fill="currentColor"/>
+  <rect x="2" y="4" width="12" height="2" fill="currentColor"/>
+  <rect x="0" y="6" width="16" height="4" fill="currentColor"/>
+  <rect x="2" y="10" width="12" height="2" fill="currentColor"/>
+  <rect x="4" y="12" width="8" height="2" fill="currentColor"/>
+  <rect x="6" y="14" width="4" height="2" fill="currentColor"/>
+</svg>
+{{- else if eq $act "zen" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="4" y="0" width="8" height="2" fill="currentColor"/>
+  <rect x="2" y="2" width="12" height="2" fill="currentColor"/>
+  <rect x="0" y="4" width="16" height="4" fill="currentColor"/>
+  <rect x="2" y="8" width="12" height="2" fill="currentColor"/>
+  <rect x="4" y="10" width="8" height="4" fill="currentColor"/>
+  <rect x="2" y="14" width="12" height="2" fill="currentColor"/>
+</svg>
+{{- else if eq $act "reise" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="6" y="0" width="4" height="4" fill="currentColor"/>
+  <rect x="0" y="4" width="16" height="4" fill="currentColor"/>
+  <rect x="6" y="8" width="4" height="4" fill="currentColor"/>
+  <rect x="4" y="12" width="8" height="2" fill="currentColor"/>
+  <rect x="6" y="14" width="4" height="2" fill="currentColor"/>
+</svg>
+{{- else if or (eq $act "velo") (eq $act "fahrrad") -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="2"  y="0"  width="4" height="2" fill="currentColor"/>
+  <rect x="0"  y="2"  width="2" height="8" fill="currentColor"/>
+  <rect x="6"  y="2"  width="2" height="8" fill="currentColor"/>
+  <rect x="2"  y="10" width="4" height="2" fill="currentColor"/>
+  <rect x="10" y="0"  width="4" height="2" fill="currentColor"/>
+  <rect x="8"  y="2"  width="2" height="8" fill="currentColor"/>
+  <rect x="14" y="2"  width="2" height="8" fill="currentColor"/>
+  <rect x="10" y="10" width="4" height="2" fill="currentColor"/>
+  <rect x="4"  y="6"  width="6" height="2" fill="currentColor"/>
+  <rect x="0"  y="14" width="16" height="2" fill="currentColor"/>
+</svg>
+{{- else if eq $act "zelten" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="6" y="0" width="4" height="2" fill="currentColor"/>
+  <rect x="4" y="2" width="8" height="2" fill="currentColor"/>
+  <rect x="2" y="4" width="12" height="2" fill="currentColor"/>
+  <rect x="0" y="6" width="16" height="2" fill="currentColor"/>
+  <rect x="0" y="8" width="6" height="6" fill="currentColor"/>
+  <rect x="10" y="8" width="6" height="6" fill="currentColor"/>
+</svg>
+{{- else if eq $act "auszeit" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="6"  y="0"  width="4" height="2" fill="currentColor"/>
+  <rect x="2"  y="2"  width="2" height="2" fill="currentColor"/>
+  <rect x="12" y="2"  width="2" height="2" fill="currentColor"/>
+  <rect x="4"  y="4"  width="8" height="2" fill="currentColor"/>
+  <rect x="0"  y="6"  width="16" height="4" fill="currentColor"/>
+  <rect x="4"  y="10" width="8" height="2" fill="currentColor"/>
+  <rect x="2"  y="12" width="2" height="2" fill="currentColor"/>
+  <rect x="12" y="12" width="2" height="2" fill="currentColor"/>
+  <rect x="6"  y="14" width="4" height="2" fill="currentColor"/>
+</svg>
+{{- else if eq $act "stadt" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="0"  y="0" width="2" height="4" fill="currentColor"/>
+  <rect x="4"  y="0" width="2" height="4" fill="currentColor"/>
+  <rect x="8"  y="0" width="2" height="4" fill="currentColor"/>
+  <rect x="12" y="0" width="2" height="4" fill="currentColor"/>
+  <rect x="0"  y="4" width="16" height="4" fill="currentColor"/>
+  <rect x="0"  y="8" width="6"  height="8" fill="currentColor"/>
+  <rect x="10" y="8" width="6"  height="8" fill="currentColor"/>
+</svg>
+{{- else if eq $act "gruppe" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="2"  y="0" width="4" height="4" fill="currentColor"/>
+  <rect x="0"  y="4" width="6" height="4" fill="currentColor"/>
+  <rect x="0"  y="8" width="2" height="6" fill="currentColor"/>
+  <rect x="4"  y="8" width="2" height="6" fill="currentColor"/>
+  <rect x="10" y="0" width="4" height="4" fill="currentColor"/>
+  <rect x="10" y="4" width="6" height="4" fill="currentColor"/>
+  <rect x="10" y="8" width="2" height="6" fill="currentColor"/>
+  <rect x="14" y="8" width="2" height="6" fill="currentColor"/>
+</svg>
+{{- else if eq $act "kanu" -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="6"  y="0"  width="4"  height="2" fill="currentColor"/>
+  <rect x="4"  y="2"  width="8"  height="2" fill="currentColor"/>
+  <rect x="0"  y="4"  width="16" height="2" fill="currentColor"/>
+  <rect x="2"  y="6"  width="12" height="4" fill="currentColor"/>
+  <rect x="4"  y="10" width="8"  height="2" fill="currentColor"/>
+  <rect x="6"  y="12" width="4"  height="2" fill="currentColor"/>
+</svg>
+{{- else -}}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" aria-hidden="true">
+  <rect x="6" y="0"  width="4"  height="2" fill="currentColor"/>
+  <rect x="4" y="2"  width="8"  height="2" fill="currentColor"/>
+  <rect x="2" y="4"  width="12" height="4" fill="currentColor"/>
+  <rect x="6" y="8"  width="4"  height="6" fill="currentColor"/>
+  <rect x="4" y="14" width="8"  height="2" fill="currentColor"/>
+</svg>
+{{- end -}}

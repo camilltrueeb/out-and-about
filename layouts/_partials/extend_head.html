@@ -15,9 +15,14 @@
     font-size: 0.85rem;
     padding: 4px 12px;
     color: var(--secondary);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
   }
   .wl-filter:hover { background: var(--entry); color: var(--primary); }
   .wl-filter.active { background: var(--primary); color: var(--theme); border-color: var(--primary); }
+  .wl-filter-sprite { display: inline-flex; align-items: center; }
+  .wl-filter-sprite svg { width: 14px; height: 14px; image-rendering: pixelated; image-rendering: crisp-edges; }
 
   /* Sortable column headers */
   .wl-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
@@ -51,22 +56,32 @@
   .wishlist-notes { color: var(--secondary); max-width: 260px; }
   .wishlist-auto { white-space: nowrap; }
   .wishlist-tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    background: var(--code-bg);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin: 1px;
+    cursor: default;
   }
-  .wishlist-tag--wandern { background: #d4edda; color: #1a5c2a; }
-  .wishlist-tag--fahrrad { background: #cce5ff; color: #004085; }
-  .wishlist-tag--kanu    { background: #d1ecf1; color: #0c5460; }
-  .wishlist-tag--stadt   { background: #e2d9f3; color: #4a235a; }
-  .wishlist-tag--auszeit { background: #fff3cd; color: #856404; }
-  .wishlist-tag--reise   { background: #fde8d8; color: #7d3c10; }
-  .wishlist-tag--gruppe  { background: #f8d7da; color: #721c24; }
-  .wishlist-tag--velo    { background: #cce5ff; color: #004085; }
-  .wishlist-tag--zen     { background: #d1ecf1; color: #0c5460; }
+  .wishlist-tag svg {
+    width: 22px;
+    height: 22px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+  .wishlist-tag--wandern { color: #3a9a50; }
+  .wishlist-tag--fahrrad { color: #2868c0; }
+  .wishlist-tag--kanu    { color: #1080a0; }
+  .wishlist-tag--stadt   { color: #7030b0; }
+  .wishlist-tag--auszeit { color: #b09000; }
+  .wishlist-tag--reise   { color: #c03030; }
+  .wishlist-tag--gruppe  { color: #c04010; }
+  .wishlist-tag--velo    { color: #2868c0; }
+  .wishlist-tag--zen     { color: #b01840; }
+  .wishlist-tag--wasser  { color: #1890c0; }
+  .wishlist-tag--zelten  { color: #c07020; }
+  .wishlist-tag--sac     { color: #5070a0; }
 
   /* Besuche column */
   .wishlist-visits { white-space: nowrap; }
