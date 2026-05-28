@@ -338,8 +338,8 @@
         'Landeskarte': wmts('ch.swisstopo.pixelkarte-farbe'),
         'Luftbild':    wmts('ch.swisstopo.swissimage'),
         'Karte grau':  wmts('ch.swisstopo.pixelkarte-grau'),
-        'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        'Weltkarte': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+          attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
           maxZoom: 19,
         }),
       };
