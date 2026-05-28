@@ -29,16 +29,15 @@
 
   var RouteDrawerControl = createClass({
     getInitialState: function () {
+      this.mapContainer = null;
+      this.leafletMap = null;
+      this.waypoints = [];
+      this.segments = [];
+      this.segmentLayers = [];
+      this.markerLayers = [];
+      this.existingLayer = null;
       return { open: false, loading: false, error: null, hasDrawing: false };
     },
-
-    mapContainer: null,
-    leafletMap: null,
-    waypoints: [],
-    segments: [],
-    segmentLayers: [],
-    markerLayers: [],
-    existingLayer: null,
 
     setMapContainer: function (el) {
       this.mapContainer = el;

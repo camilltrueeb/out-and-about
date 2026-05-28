@@ -15,7 +15,7 @@
           sources: ['local', 'url', 'camera'],
         },
         function (error, result) {
-          if (error) return;
+          if (error || !result) return;
           if (result.event === 'success') {
             newUrls.push(result.info.secure_url);
           }
