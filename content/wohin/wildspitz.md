@@ -1,0 +1,5 @@
+---
+title: Wildspitz
+activity:
+  - Wandern
+---
