@@ -163,6 +163,10 @@
           'Landeskarte': wmts('ch.swisstopo.pixelkarte-farbe'),
           'Luftbild':    wmts('ch.swisstopo.swissimage'),
           'Karte grau':  wmts('ch.swisstopo.pixelkarte-grau'),
+          'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19,
+          }),
         };
         baseLayers['Landeskarte'].addTo(map);
         function ovlay(id) {
