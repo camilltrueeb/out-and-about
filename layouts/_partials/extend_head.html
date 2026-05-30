@@ -5,8 +5,42 @@
     object-position: center;
   }
 
+  /* Header with search top-right on desktop */
+  .wl-header-wrap { margin-bottom: 8px; }
+  .wl-mobile-sort { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .wl-msort { display: none; }
+  .wl-search {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--entry);
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-family: inherit;
+    outline: none;
+  }
+  .wl-search:focus { border-color: var(--primary); }
+  .wl-search::placeholder { color: var(--secondary); }
+
   /* Wohin filter bar */
   .wl-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+
+  @media (min-width: 641px) {
+    .wl-header-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .wl-header-wrap .page-header { margin-bottom: 0; flex: 1; }
+    .wl-search { width: 220px; flex-shrink: 0; }
+    .wl-mobile-sort { display: none; }
+    .wl-filters {
+      width: min(120%, 100vw - 2rem);
+      margin-left: calc((100% - min(120%, 100vw - 2rem)) / 2);
+      justify-content: center;
+    }
+  }
   .wl-filter {
     background: none;
     border: 1px solid var(--border);
@@ -224,6 +258,105 @@
   .wl-gallery-close:hover,
   .wl-gallery-prev:hover:not(:disabled),
   .wl-gallery-next:hover:not(:disabled) { background: rgba(0,0,0,0.8); }
+
+  @media (max-width: 640px) {
+    /* Reset the desktop bleed trick */
+    .wishlist-wrap { overflow-x: hidden; }
+    .wishlist { display: block; width: 100%; margin: 0; }
+    .wishlist thead { display: none; }
+    .wishlist tbody { display: flex; flex-direction: column; gap: 12px; }
+
+    .wishlist tbody tr[hidden] { display: none; }
+
+    /* Each row = a card */
+    .wishlist tbody tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .wishlist td { padding: 0; border-bottom: none; }
+
+    /* Hero thumbnail */
+    .wishlist-img-cell { flex: 0 0 100%; padding: 0; }
+    .wishlist-img-cell:not(:has(img)) { display: none; }
+    .wishlist-img-cell .wishlist-thumb {
+      width: 100%;
+      height: 180px;
+      border-radius: 0;
+      object-fit: cover;
+    }
+
+    /* Name */
+    .wishlist-name { flex: 0 0 100%; padding: 10px 12px 2px; }
+
+    /* Activity tags */
+    .wishlist td:nth-child(3) { flex: 0 0 100%; padding: 2px 10px 6px; }
+
+    /* Action bar: distance · links · map/GPX · visits — all on one line */
+    .wishlist-auto {
+      flex: 1 1 auto;
+      order: 4;
+      padding: 8px 6px 8px 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.85rem;
+    }
+    .wishlist td:nth-child(5) {
+      flex: 0 0 auto;
+      order: 5;
+      padding: 8px 4px;
+      border-top: 1px solid var(--border);
+    }
+    .wishlist td:nth-child(5):empty { display: none; }
+    .wishlist-map-cell {
+      flex: 0 0 auto;
+      order: 6;
+      padding: 8px 4px;
+      border-top: 1px solid var(--border);
+      width: auto;
+      text-align: left;
+    }
+    .wishlist-visits {
+      flex: 0 0 auto;
+      order: 7;
+      padding: 8px 12px 8px 4px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Notes: full-width below action bar, reordered after visits */
+    .wishlist-notes {
+      flex: 0 0 100%;
+      order: 8;
+      padding: 6px 12px 10px;
+      border-top: 1px solid var(--border);
+      max-width: none;
+      font-size: 0.85rem;
+    }
+    .wishlist-notes:empty { display: none; }
+
+    /* Mobile: search full-width above sort buttons */
+    .wl-header-wrap { margin-bottom: 16px; }
+    .wl-search { width: 100%; box-sizing: border-box; }
+    .wl-msort {
+      display: inline-flex;
+      align-items: center;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      color: var(--secondary);
+    }
+    .wl-msort:hover { background: var(--entry); color: var(--primary); }
+    .wl-msort.active { background: var(--primary); color: var(--theme); border-color: var(--primary); }
+
+    /* Map modal: shorter on small screens */
+    #wl-map-el { height: 380px; }
+  }
 </style>
 
 <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>

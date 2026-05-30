@@ -1,8 +1,17 @@
 {{- define "main" }}
-<header class="page-header">
-  <h1>{{ .Title }}</h1>
-  {{- with .Description }}<p class="page-description">{{ . }}</p>{{- end }}
-</header>
+<div class="wl-header-wrap">
+  <header class="page-header">
+    <h1>{{ .Title }}</h1>
+    {{- with .Description }}<p class="page-description">{{ . }}</p>{{- end }}
+  </header>
+  <input type="search" class="wl-search" placeholder="Suchen…" aria-label="Einträge suchen">
+</div>
+
+<div class="wl-mobile-sort">
+  <button class="wl-msort active" data-msort="title">A–Z</button>
+  <button class="wl-msort" data-msort="distance">Distanz</button>
+  <button class="wl-msort" data-msort="visits">Besuche</button>
+</div>
 
 <div class="wl-filters">
   <button class="wl-filter active" data-filter="all">Alle</button>
@@ -255,34 +264,39 @@
   const filterBtns = document.querySelectorAll('.wl-filter');
   const allFilterBtn = document.querySelector('.wl-filter[data-filter="all"]');
   const tableRows = document.querySelectorAll('.wishlist tbody tr');
+  const searchInput = document.querySelector('.wl-search');
+
+  function applyFilters() {
+    const term = searchInput.value.toLowerCase().trim();
+    const activeFilters = Array.from(filterBtns)
+      .filter(b => b.classList.contains('active') && b.dataset.filter !== 'all')
+      .map(b => b.dataset.filter);
+
+    tableRows.forEach(row => {
+      const activities = (row.dataset.activity || '').split(' ').filter(Boolean);
+      const passesActivity = activeFilters.length === 0 || activeFilters.some(f => activities.includes(f));
+      const passesSearch = !term || (row.dataset.title || '').toLowerCase().includes(term);
+      row.hidden = !(passesActivity && passesSearch);
+    });
+  }
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const filter = btn.dataset.filter;
-
       if (filter === 'all') {
         filterBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        tableRows.forEach(row => { row.hidden = false; });
       } else {
         allFilterBtn.classList.remove('active');
         btn.classList.toggle('active');
-
-        const activeFilters = Array.from(filterBtns)
-          .filter(b => b.classList.contains('active') && b.dataset.filter !== 'all')
-          .map(b => b.dataset.filter);
-
-        if (activeFilters.length === 0) {
-          tableRows.forEach(row => { row.hidden = false; });
-        } else {
-          tableRows.forEach(row => {
-            const activities = (row.dataset.activity || '').split(' ').filter(Boolean);
-            row.hidden = !activeFilters.some(f => activities.includes(f));
-          });
-        }
+        const anyActive = Array.from(filterBtns).some(b => b.classList.contains('active') && b.dataset.filter !== 'all');
+        if (!anyActive) allFilterBtn.classList.add('active');
       }
+      applyFilters();
     });
   });
+
+  searchInput.addEventListener('input', applyFilters);
 
   // Map functionality
   (function() {
@@ -417,50 +431,66 @@
   })();
 
   let sortCol = null, sortDir = 1;
-  const icons = { 0: '', 1: ' ↑', '-1': ' ↓' };
+
+  function applySort(col) {
+    if (col === 'title') {
+      sortCol = null;
+      sortDir = 1;
+    } else if (sortCol === col) {
+      sortDir = sortDir === 1 ? -1 : 0;
+      if (sortDir === 0) sortCol = null;
+    } else {
+      sortCol = col;
+      sortDir = 1;
+    }
+
+    document.querySelectorAll('.wl-sortable').forEach(h => {
+      h.querySelector('.wl-sort-icon').textContent =
+        h.dataset.col === sortCol ? (sortDir === 1 ? '↑' : '↓') : '';
+    });
+
+    const mLabels = { title: 'A–Z', distance: 'Distanz', visits: 'Besuche' };
+    document.querySelectorAll('.wl-msort').forEach(btn => {
+      const bcol = btn.dataset.msort;
+      const isActive = bcol === 'title' ? sortCol === null : sortCol === bcol;
+      btn.classList.toggle('active', isActive);
+      const arrow = (sortCol === bcol && bcol !== 'title') ? (sortDir === 1 ? ' ↑' : ' ↓') : '';
+      btn.textContent = mLabels[bcol] + arrow;
+    });
+
+    const tbody = document.querySelector('.wishlist tbody');
+    const rows = [...tbody.querySelectorAll('tr')];
+
+    if (!sortCol) {
+      rows.sort((a, b) => a.dataset.title.localeCompare(b.dataset.title));
+    } else if (sortCol === 'type') {
+      rows.sort((a, b) => sortDir * a.dataset.activity.localeCompare(b.dataset.activity));
+    } else if (sortCol === 'visits') {
+      rows.sort((a, b) => {
+        const av = parseInt(a.querySelector('.wl-count').textContent) || 0;
+        const bv = parseInt(b.querySelector('.wl-count').textContent) || 0;
+        return sortDir * (av - bv);
+      });
+    } else if (sortCol === 'distance') {
+      rows.sort((a, b) => {
+        const ad = parseFloat(a.dataset.distance);
+        const bd = parseFloat(b.dataset.distance);
+        const aHas = !isNaN(ad), bHas = !isNaN(bd);
+        if (!aHas && !bHas) return 0;
+        if (!aHas) return 1;
+        if (!bHas) return -1;
+        return sortDir * (ad - bd);
+      });
+    }
+    rows.forEach(r => tbody.appendChild(r));
+  }
 
   document.querySelectorAll('.wl-sortable').forEach(th => {
-    th.addEventListener('click', () => {
-      const col = th.dataset.col;
-      if (sortCol === col) {
-        sortDir = sortDir === 1 ? -1 : 0;
-      } else {
-        sortCol = col;
-        sortDir = 1;
-      }
-      if (sortDir === 0) sortCol = null;
+    th.addEventListener('click', () => applySort(th.dataset.col));
+  });
 
-      document.querySelectorAll('.wl-sortable').forEach(h => {
-        h.querySelector('.wl-sort-icon').textContent =
-          h.dataset.col === sortCol ? (sortDir === 1 ? '↑' : '↓') : '';
-      });
-
-      const tbody = document.querySelector('.wishlist tbody');
-      const rows = [...tbody.querySelectorAll('tr')];
-
-      if (!sortCol) {
-        rows.sort((a, b) => a.dataset.title.localeCompare(b.dataset.title));
-      } else if (col === 'type') {
-        rows.sort((a, b) => sortDir * a.dataset.activity.localeCompare(b.dataset.activity));
-      } else if (col === 'visits') {
-        rows.sort((a, b) => {
-          const av = parseInt(a.querySelector('.wl-count').textContent) || 0;
-          const bv = parseInt(b.querySelector('.wl-count').textContent) || 0;
-          return sortDir * (av - bv);
-        });
-      } else if (col === 'distance') {
-        rows.sort((a, b) => {
-          const ad = parseFloat(a.dataset.distance);
-          const bd = parseFloat(b.dataset.distance);
-          const aHas = !isNaN(ad), bHas = !isNaN(bd);
-          if (!aHas && !bHas) return 0;
-          if (!aHas) return 1;
-          if (!bHas) return -1;
-          return sortDir * (ad - bd);
-        });
-      }
-      rows.forEach(r => tbody.appendChild(r));
-    });
+  document.querySelectorAll('.wl-msort').forEach(btn => {
+    btn.addEventListener('click', () => applySort(btn.dataset.msort));
   });
 
   // Auto-calculate driving duration from Zürich via OpenRouteService
