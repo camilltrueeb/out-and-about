@@ -66,7 +66,7 @@
       <tr data-activity="{{ $actVal }}" data-title="{{ .Title }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}" data-images="{{ $gallery | jsonify }}">
         <td class="wishlist-img-cell">
           {{- if $gallery }}
-          <img src="{{ index $gallery $thumbIdx }}" alt="{{ .Title }}" class="wishlist-thumb">
+          <img src="{{ index $gallery $thumbIdx }}" alt="{{ .Title }}" class="wishlist-thumb" loading="lazy">
           {{- end }}
         </td>
         <td class="wishlist-name">{{ .Title }}</td>
@@ -154,6 +154,7 @@
   // Gallery
   (function() {
     let galleryImgs = [];
+    let galleryEls = [];
     let currentIdx = 0;
     const modal = document.getElementById('wl-gallery');
     const wrap = document.getElementById('wl-gallery-wrap');
@@ -163,9 +164,8 @@
 
     function goTo(idx, smooth) {
       currentIdx = Math.max(0, Math.min(idx, galleryImgs.length - 1));
-      const imgs = wrap.querySelectorAll('img');
-      if (imgs[currentIdx]) {
-        wrap.scrollTo({ left: imgs[currentIdx].offsetLeft, behavior: smooth ? 'smooth' : 'instant' });
+      if (galleryEls[currentIdx]) {
+        wrap.scrollTo({ left: galleryEls[currentIdx].offsetLeft, behavior: smooth ? 'smooth' : 'instant' });
       }
       prevBtn.disabled = currentIdx === 0;
       nextBtn.disabled = currentIdx === galleryImgs.length - 1;
@@ -173,12 +173,14 @@
 
     function openGallery(imgList, startIdx) {
       galleryImgs = imgList;
+      galleryEls = [];
       wrap.innerHTML = '';
       imgList.forEach(src => {
         const img = document.createElement('img');
         img.src = src;
         img.alt = '';
         wrap.appendChild(img);
+        galleryEls.push(img);
       });
       modal.showModal();
       requestAnimationFrame(() => goTo(startIdx || 0, false));
@@ -197,9 +199,8 @@
     });
 
     wrap.addEventListener('scroll', () => {
-      const imgs = wrap.querySelectorAll('img');
       let closest = 0, minDist = Infinity;
-      imgs.forEach((img, i) => {
+      galleryEls.forEach((img, i) => {
         const dist = Math.abs(img.offsetLeft - wrap.scrollLeft);
         if (dist < minDist) { minDist = dist; closest = i; }
       });
@@ -251,37 +252,32 @@
     btn.addEventListener('click', () => postVisit(btn.closest('.wishlist-visits'), -1));
   });
 
-  document.querySelectorAll('.wl-filter').forEach(btn => {
+  const filterBtns = document.querySelectorAll('.wl-filter');
+  const allFilterBtn = document.querySelector('.wl-filter[data-filter="all"]');
+  const tableRows = document.querySelectorAll('.wishlist tbody tr');
+
+  filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const filter = btn.dataset.filter;
-      
-      // If "all" is clicked, clear all others and show everything
+
       if (filter === 'all') {
-        document.querySelectorAll('.wl-filter').forEach(b => b.classList.remove('active'));
+        filterBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.querySelectorAll('.wishlist tbody tr').forEach(row => {
-          row.hidden = false;
-        });
+        tableRows.forEach(row => { row.hidden = false; });
       } else {
-        // Remove "all" as active if it was
-        document.querySelector('.wl-filter[data-filter="all"]').classList.remove('active');
-        
-        // Toggle this filter
+        allFilterBtn.classList.remove('active');
         btn.classList.toggle('active');
-        
-        // Get all active filters
-        const activeFilters = Array.from(document.querySelectorAll('.wl-filter.active:not([data-filter="all"])')).map(b => b.dataset.filter);
-        
-        // If no filters selected, show all
+
+        const activeFilters = Array.from(filterBtns)
+          .filter(b => b.classList.contains('active') && b.dataset.filter !== 'all')
+          .map(b => b.dataset.filter);
+
         if (activeFilters.length === 0) {
-          document.querySelectorAll('.wishlist tbody tr').forEach(row => {
-            row.hidden = false;
-          });
+          tableRows.forEach(row => { row.hidden = false; });
         } else {
-          // Show rows that have at least one of the selected activities
-          document.querySelectorAll('.wishlist tbody tr').forEach(row => {
+          tableRows.forEach(row => {
             const activities = (row.dataset.activity || '').split(' ').filter(Boolean);
-            row.hidden = !activeFilters.some(filter => activities.includes(filter));
+            row.hidden = !activeFilters.some(f => activities.includes(f));
           });
         }
       }
@@ -514,31 +510,33 @@
       } catch (e) { return null; }
     }
 
-    document.querySelectorAll('.wishlist tbody tr').forEach(async row => {
-      const coord = await resolveCoord(row);
-      if (!coord) return;
-      const [lon, lat] = coord;
-      const cacheKey = `ors2_${lon.toFixed(4)}_${lat.toFixed(4)}`;
-      const cell = row.querySelector('.wishlist-auto');
-      if (!cell) return;
+    (async () => {
+      for (const row of document.querySelectorAll('.wishlist tbody tr')) {
+        const coord = await resolveCoord(row);
+        if (!coord) continue;
+        const [lon, lat] = coord;
+        const cacheKey = `ors2_${lon.toFixed(4)}_${lat.toFixed(4)}`;
+        const cell = row.querySelector('.wishlist-auto');
+        if (!cell) continue;
 
-      const cached = localStorage.getItem(cacheKey);
-      if (cached) {
-        try {
-          const { km, seconds } = JSON.parse(cached);
-          cell.textContent = formatDuration(seconds);
-          row.dataset.distance = km;
-        } catch (e) {}
-        return;
-      }
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          try {
+            const { km, seconds } = JSON.parse(cached);
+            cell.textContent = formatDuration(seconds);
+            row.dataset.distance = km;
+          } catch (e) {}
+          continue;
+        }
 
-      const result = await fetchORS(lon, lat);
-      if (result) {
-        localStorage.setItem(cacheKey, JSON.stringify(result));
-        cell.textContent = formatDuration(result.seconds);
-        row.dataset.distance = result.km;
+        const result = await fetchORS(lon, lat);
+        if (result) {
+          localStorage.setItem(cacheKey, JSON.stringify(result));
+          cell.textContent = formatDuration(result.seconds);
+          row.dataset.distance = result.km;
+        }
       }
-    });
+    })();
   })();
 </script>
 {{- end }}
