@@ -1,5 +1,5 @@
 ---
-title: Hotel Aja Scuol
+title: Hotel Üja Scuol
 activity:
   - Zen
 reference: https://www.uja-scuol.ch
