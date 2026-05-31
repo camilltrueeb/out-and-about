@@ -128,7 +128,7 @@
           </button>
           {{- end }}
         </td>
-        <td class="wishlist-notes">{{ .Params.notes }}</td>
+        <td class="wishlist-notes" title="{{ .Params.notes | replaceRE "\n+" " " | strings.TrimSpace }}"><span>{{ .Params.notes }}</span></td>
         <td class="wishlist-visits" data-slug="{{ .Title | urlize }}">
           <button class="wl-dec" title="Besuch entfernen">−</button>
           <span class="wl-count">—</span>
