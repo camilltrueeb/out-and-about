@@ -77,6 +77,15 @@
     btn.addEventListener('click', function () {
       netlifyIdentity.open();
     });
+
+    // Help Safari recognize the widget's inputs for autofill
+    var observer = new MutationObserver(function () {
+      var email = document.querySelector('input[type="email"]');
+      var pass = document.querySelector('input[type="password"]');
+      if (email) email.setAttribute('autocomplete', 'username');
+      if (pass) pass.setAttribute('autocomplete', 'current-password');
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }());
   </script>
 </body>
