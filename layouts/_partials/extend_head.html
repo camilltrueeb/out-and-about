@@ -341,13 +341,13 @@
     }
 
     /* Name */
-    .wishlist-name { flex: 0 0 100%; padding: 10px 16px 2px; }
+    .wishlist td.wishlist-name { flex: 0 0 100%; padding: 10px 16px 2px; }
 
     /* Activity tags */
     .wishlist td:nth-child(3) { flex: 0 0 100%; padding: 2px 16px 6px; }
 
     /* Action bar: [distance ∞] left · [links map gpx visits] right */
-    .wishlist-auto {
+    .wishlist td.wishlist-auto {
       flex: 1 1 auto;
       order: 4;
       padding: 6px 4px 8px 16px;
@@ -359,14 +359,14 @@
       padding: 6px 4px 8px;
     }
     .wishlist td:nth-child(5):empty { display: none; }
-    .wishlist-map-cell {
+    .wishlist td.wishlist-map-cell {
       flex: 0 0 auto;
       order: 6;
       padding: 6px 6px 8px 4px;
       width: auto;
       text-align: left;
     }
-    .wishlist-visits {
+    .wishlist td.wishlist-visits {
       flex: 0 0 auto;
       order: 7;
       padding: 6px 16px 8px 10px;
@@ -376,14 +376,14 @@
     .wl-inc { margin-left: 2px; }
 
     /* Notes: full-width below action bar */
-    .wishlist-notes {
+    .wishlist td.wishlist-notes {
       flex: 0 0 100%;
       order: 8;
       padding: 4px 16px 10px;
       max-width: none;
       font-size: 0.85rem;
     }
-    .wishlist-notes:empty { display: none; }
+    .wishlist td.wishlist-notes:empty { display: none; }
 
     /* Mobile: search full-width above sort buttons */
     .wl-header-wrap { margin-bottom: 16px; }
