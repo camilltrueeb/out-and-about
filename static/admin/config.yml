@@ -55,6 +55,11 @@ collections:
         name: "gallery"
         widget: "gallery-picker"
         required: false
+      - label: "Standort"
+        name: "location"
+        widget: "location-picker"
+        required: false
+        hint: "Einzelner Punkt auf der Karte (für Einträge ohne GPX-Route)"
       - label: "GPX Route"
         name: "gpx"
         widget: "file"

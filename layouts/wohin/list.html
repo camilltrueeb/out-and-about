@@ -72,7 +72,7 @@
         {{- end }}
       {{- end }}
       {{- if ge $thumbIdx (len $gallery) }}{{- $thumbIdx = 0 }}{{- end }}
-      <tr data-activity="{{ $actVal }}" data-title="{{ .Title }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}" data-images="{{ $gallery | jsonify }}">
+      <tr data-activity="{{ $actVal }}" data-title="{{ .Title }}" data-location="{{ .Params.location | default "" }}" data-gpx="{{ .Params.gpx | default "" }}" data-geojson="{{ .Params.route_geojson | default "" }}" data-images="{{ $gallery | jsonify }}">
         <td class="wishlist-img-cell">
           {{- if $gallery }}
           <img src="{{ index $gallery $thumbIdx }}" alt="{{ .Title }}" class="wishlist-thumb" loading="lazy">
@@ -101,7 +101,6 @@
           {{- range $i, $url := $refs }}<a href="{{ $url }}" target="_blank" rel="noopener" style="margin-right:3px">↗{{- if $multi }}<sup>{{ add $i 1 }}</sup>{{- end }}</a>{{- end }}
         </td>
         <td class="wishlist-map-cell">
-          {{- if or .Params.gpx .Params.route_geojson }}
           <button class="wl-map-btn" title="Auf Karte anzeigen">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
@@ -109,7 +108,6 @@
               <line x1="15" y1="6" x2="15" y2="21"/>
             </svg>
           </button>
-          {{- end }}
           {{- if .Params.gpx }}
           <a href="{{ .Params.gpx | absURL }}" download class="wl-gpx-btn" title="GPX herunterladen">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -328,7 +326,14 @@
       leafletLoaded = true;
     }
 
-    async function openMap(title, gpxPath, geojsonStr) {
+    const pinIcon = () => window.L.divIcon({
+      className: '',
+      html: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="30" viewBox="0 0 22 30"><path fill="#a855f7" d="M11 0C4.9 0 0 4.9 0 11c0 8.3 11 19 11 19S22 19.3 22 11C22 4.9 17.1 0 11 0z"/><circle fill="white" cx="11" cy="11" r="4.5"/></svg>',
+      iconSize: [22, 30],
+      iconAnchor: [11, 30],
+    });
+
+    async function openMap(title, locationStr, gpxPath, geojsonStr) {
       const modal = document.getElementById('wl-map-modal');
       document.getElementById('wl-map-title').textContent = title;
       modal.showModal();
@@ -371,6 +376,34 @@
 
       const routeStyle = { color: '#a855f7', weight: 5, opacity: 1 };
 
+      // Resolve marker coord from sync sources (location field > geojson start)
+      let markerLatLng = null;
+
+      if (locationStr && locationStr.trim()) {
+        const [lat, lon] = locationStr.split(',').map(Number);
+        if (!isNaN(lat) && !isNaN(lon)) markerLatLng = [lat, lon];
+      }
+      if (!markerLatLng && geojsonStr && geojsonStr.trim()) {
+        try {
+          const gj = JSON.parse(geojsonStr);
+          const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
+          for (const f of features) {
+            if (f.geometry?.type === 'LineString' && f.geometry.coordinates.length > 0) {
+              const [lon, lat] = f.geometry.coordinates[0];
+              markerLatLng = [lat, lon];
+              break;
+            }
+          }
+        } catch (e) {}
+      }
+
+      const placeMarker = (latLng) => L.marker(latLng, { icon: pinIcon() }).addTo(map);
+
+      if (markerLatLng) {
+        placeMarker(markerLatLng);
+        if (!gpxPath && !geojsonStr) map.setView(markerLatLng, 13);
+      }
+
       if (gpxPath) {
         new L.GPX(gpxPath, {
           async: true,
@@ -378,19 +411,34 @@
           marker_options: { startIconUrl: '', endIconUrl: '', shadowUrl: '' }
         }).on('loaded', function(e) {
           map.fitBounds(e.target.getBounds(), { padding: [20, 20] });
+          if (!markerLatLng) {
+            // Extract GPX start point for the marker
+            for (const l of e.target.getLayers()) {
+              if (typeof l.getLatLngs === 'function') {
+                const lls = l.getLatLngs();
+                const flat = Array.isArray(lls[0]) ? lls[0] : lls;
+                if (flat.length > 0) { placeMarker([flat[0].lat, flat[0].lng]); break; }
+              }
+            }
+          }
         }).addTo(map);
       } else if (geojsonStr) {
         try {
           const layer = L.geoJSON(JSON.parse(geojsonStr), { style: routeStyle }).addTo(map);
           if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [20, 20] });
-        } catch (e) { /* ignore invalid geojson */ }
+        } catch (e) {}
+      } else if (!markerLatLng) {
+        // ZH HB default when no geo data at all
+        const zhHB = [47.3779, 8.5403];
+        placeMarker(zhHB);
+        map.setView(zhHB, 12);
       }
     }
 
     document.querySelectorAll('.wl-map-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const row = btn.closest('tr');
-        openMap(row.dataset.title, row.dataset.gpx, row.dataset.geojson);
+        openMap(row.dataset.title, row.dataset.location, row.dataset.gpx, row.dataset.geojson);
       });
     });
 
@@ -498,8 +546,13 @@
     const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1NDQ4NDY3MmM2NTRmZjFiZWZiMDY0NzM1NjFjNDg1IiwiaCI6Im11cm11cjY0In0=';
     const ZH = '8.5403,47.3779'; // Zürich HB, lon,lat
 
-    // Returns [lon, lat] for ORS from the route's first coordinate
+    // Returns [lon, lat] for ORS. Checks location field, then geojson, then gpx. null = skip travel time.
     async function resolveCoord(row) {
+      const locStr = row.dataset.location;
+      if (locStr && locStr.trim()) {
+        const [lat, lon] = locStr.split(',').map(Number);
+        if (!isNaN(lat) && !isNaN(lon)) return [lon, lat];
+      }
       const geoStr = row.dataset.geojson;
       if (geoStr && geoStr.trim()) {
         try {
