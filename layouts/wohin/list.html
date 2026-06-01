@@ -4,7 +4,21 @@
     <h1>{{ .Title }}</h1>
     {{- with .Description }}<p class="page-description">{{ . }}</p>{{- end }}
   </header>
-  <input type="search" class="wl-search" placeholder="Suchen…" aria-label="Einträge suchen">
+  <div class="wl-right">
+    <input type="search" class="wl-search" placeholder="Suchen…" aria-label="Einträge suchen">
+    <button id="wl-area-toggle" class="wl-area-toggle" title="Nach Bereich filtern" aria-label="Kartenfilter">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+    </button>
+  </div>
+</div>
+
+<div id="wl-area-wrap" hidden>
+  <div id="wl-area-map"></div>
+  <div class="wl-area-toolbar">
+    <button id="wl-draw-btn" class="wl-area-btn">Bereich auswählen</button>
+    <button id="wl-clear-btn" class="wl-area-btn" hidden>Auswahl löschen</button>
+    <span id="wl-draw-hint"></span>
+  </div>
 </div>
 
 <div class="wl-mobile-sort">
@@ -226,6 +240,67 @@
     });
   })();
 
+  // Shared state
+  let wlAreaBounds = null;
+  let leafletLoaded = false;
+  const coordCache = new Map();
+
+  function loadScript(src) {
+    return new Promise(resolve => {
+      if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve;
+      document.head.appendChild(s);
+    });
+  }
+  function loadCSS(href) {
+    if (!document.querySelector('link[href="' + href + '"]')) {
+      const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
+      document.head.appendChild(l);
+    }
+  }
+  async function ensureLeaflet() {
+    if (leafletLoaded) return;
+    loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+    await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/gpx.min.js');
+    leafletLoaded = true;
+  }
+
+  // [lon, lat] for ORS. location field → geojson start → gpx start → null
+  async function resolveCoord(row) {
+    const locStr = row.dataset.location;
+    if (locStr && locStr.trim()) {
+      const [lat, lon] = locStr.split(',').map(Number);
+      if (!isNaN(lat) && !isNaN(lon)) return [lon, lat];
+    }
+    const geoStr = row.dataset.geojson;
+    if (geoStr && geoStr.trim()) {
+      try {
+        const gj = JSON.parse(geoStr);
+        const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
+        for (const f of features) {
+          if (f.geometry?.type === 'LineString' && f.geometry.coordinates.length > 0)
+            return f.geometry.coordinates[0];
+        }
+      } catch (e) {}
+    }
+    const gpxPath = row.dataset.gpx;
+    if (gpxPath && gpxPath.trim()) {
+      try {
+        const xml = await fetch(gpxPath).then(r => r.text());
+        const doc = new DOMParser().parseFromString(xml, 'text/xml');
+        const pt = doc.querySelector('trkpt');
+        if (pt) return [parseFloat(pt.getAttribute('lon')), parseFloat(pt.getAttribute('lat'))];
+      } catch (e) {}
+    }
+    return null;
+  }
+  function getCoord(row) {
+    if (!coordCache.has(row)) coordCache.set(row, resolveCoord(row));
+    return coordCache.get(row);
+  }
+
   // Load visit counts
   document.querySelectorAll('.wishlist-visits').forEach(async cell => {
     const slug = cell.dataset.slug;
@@ -274,7 +349,13 @@
       const activities = (row.dataset.activity || '').split(' ').filter(Boolean);
       const passesActivity = activeFilters.length === 0 || activeFilters.some(f => activities.includes(f));
       const passesSearch = !term || (row.dataset.title || '').toLowerCase().includes(term);
-      row.hidden = !(passesActivity && passesSearch);
+      let passesArea = true;
+      if (wlAreaBounds) {
+        const lat = parseFloat(row.dataset.resolvedLat);
+        const lon = parseFloat(row.dataset.resolvedLon);
+        passesArea = isNaN(lat) || isNaN(lon) ? true : wlAreaBounds.contains([lat, lon]);
+      }
+      row.hidden = !(passesActivity && passesSearch && passesArea);
     });
   }
 
@@ -298,33 +379,7 @@
 
   // Map functionality
   (function() {
-    let leafletLoaded = false;
     let currentMap = null;
-
-    function loadScript(src) {
-      return new Promise(resolve => {
-        if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
-        const s = document.createElement('script');
-        s.src = src;
-        s.onload = resolve;
-        document.head.appendChild(s);
-      });
-    }
-
-    function loadCSS(href) {
-      if (!document.querySelector('link[href="' + href + '"]')) {
-        const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
-        document.head.appendChild(l);
-      }
-    }
-
-    async function ensureLeaflet() {
-      if (leafletLoaded) return;
-      loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-      await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
-      await loadScript('https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/gpx.min.js');
-      leafletLoaded = true;
-    }
 
     const pinIcon = () => window.L.divIcon({
       className: '',
@@ -478,6 +533,139 @@
     });
   })();
 
+  // Area filter map
+  (function () {
+    const toggle  = document.getElementById('wl-area-toggle');
+    const wrap    = document.getElementById('wl-area-wrap');
+    const drawBtn = document.getElementById('wl-draw-btn');
+    const clearBtn = document.getElementById('wl-clear-btn');
+    const hint    = document.getElementById('wl-draw-hint');
+
+    let filterMap = null;
+    let drawMode = false;
+    let drawStart = null;
+    let previewRect = null;
+    let selectionRect = null;
+
+    function updateToggle() {
+      toggle.classList.toggle('active', !!wlAreaBounds);
+    }
+
+    toggle.addEventListener('click', async () => {
+      const opening = wrap.hidden;
+      wrap.hidden = !opening;
+      if (opening && !filterMap) await initFilterMap();
+    });
+
+    async function initFilterMap() {
+      await ensureLeaflet();
+      const L = window.L;
+      const map = L.map(document.getElementById('wl-area-map'), {
+        layers: [L.tileLayer(
+          'https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.pixelkarte-farbe/default/current/3857/{z}/{x}/{y}.jpeg',
+          { attribution: '&copy; <a href="https://www.swisstopo.admin.ch" target="_blank">swisstopo</a>', maxZoom: 18 }
+        )]
+      }).setView([46.8, 8.2], 7);
+      setTimeout(() => map.invalidateSize(), 50);
+      filterMap = map;
+
+      document.querySelectorAll('.wishlist tbody tr').forEach(row => {
+        getCoord(row).then(coord => {
+          const [lon, lat] = coord || [8.5403, 47.3779];
+          row.dataset.resolvedLon = lon;
+          row.dataset.resolvedLat = lat;
+          if (wlAreaBounds) applyFilters();
+          L.circleMarker([lat, lon], {
+            radius: 5, color: '#a855f7', fillColor: '#a855f7', fillOpacity: 0.75, weight: 1.5
+          }).bindTooltip(row.dataset.title, { direction: 'top', offset: [0, -5] }).addTo(map);
+        });
+      });
+
+      setupDrawing(map);
+    }
+
+    function setupDrawing(map) {
+      const el = map.getContainer();
+
+      function toLatLng(clientX, clientY) {
+        const r = el.getBoundingClientRect();
+        return map.containerPointToLatLng(window.L.point(clientX - r.left, clientY - r.top));
+      }
+
+      function onStart(x, y) {
+        if (!drawMode) return false;
+        drawStart = toLatLng(x, y);
+        return true;
+      }
+      function onMove(x, y) {
+        if (!drawMode || !drawStart) return;
+        if (previewRect) previewRect.remove();
+        previewRect = window.L.rectangle([drawStart, toLatLng(x, y)], {
+          color: '#a855f7', weight: 2, dashArray: '5,5', fillOpacity: 0.12, interactive: false
+        }).addTo(map);
+      }
+      function onEnd(x, y) {
+        if (!drawMode || !drawStart) return;
+        if (previewRect) { previewRect.remove(); previewRect = null; }
+        if (selectionRect) selectionRect.remove();
+        selectionRect = window.L.rectangle([drawStart, toLatLng(x, y)], {
+          color: '#a855f7', weight: 2, fillOpacity: 0.12
+        }).addTo(map);
+        wlAreaBounds = selectionRect.getBounds();
+        drawStart = null;
+        stopDraw();
+        clearBtn.hidden = false;
+        hint.textContent = '';
+        applyFilters();
+        updateToggle();
+      }
+
+      el.addEventListener('mousedown', e => { if (onStart(e.clientX, e.clientY)) e.preventDefault(); });
+      el.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+      el.addEventListener('mouseup',   e => onEnd(e.clientX, e.clientY));
+
+      el.addEventListener('touchstart', e => { if (onStart(e.touches[0].clientX, e.touches[0].clientY)) e.preventDefault(); }, { passive: false });
+      el.addEventListener('touchmove',  e => { onMove(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, { passive: false });
+      el.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY); });
+    }
+
+    function startDraw() {
+      drawMode = true;
+      filterMap.dragging.disable();
+      filterMap.getContainer().style.cursor = 'crosshair';
+      drawBtn.classList.add('drawing');
+      drawBtn.textContent = 'Abbrechen';
+      hint.textContent = 'Ziehen um Bereich zu markieren';
+    }
+    function stopDraw() {
+      drawMode = false;
+      filterMap.dragging.enable();
+      filterMap.getContainer().style.cursor = '';
+      drawBtn.classList.remove('drawing');
+      drawBtn.textContent = 'Bereich auswählen';
+    }
+
+    drawBtn.addEventListener('click', () => {
+      if (!filterMap) return;
+      if (drawMode) { stopDraw(); hint.textContent = ''; return; }
+      if (selectionRect) { selectionRect.remove(); selectionRect = null; }
+      wlAreaBounds = null;
+      clearBtn.hidden = true;
+      applyFilters();
+      updateToggle();
+      startDraw();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      if (selectionRect) { selectionRect.remove(); selectionRect = null; }
+      wlAreaBounds = null;
+      clearBtn.hidden = true;
+      hint.textContent = '';
+      applyFilters();
+      updateToggle();
+    });
+  })();
+
   let sortCol = null, sortDir = 1;
 
   function applySort(col) {
@@ -546,36 +734,6 @@
     const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1NDQ4NDY3MmM2NTRmZjFiZWZiMDY0NzM1NjFjNDg1IiwiaCI6Im11cm11cjY0In0=';
     const ZH = '8.5403,47.3779'; // Zürich HB, lon,lat
 
-    // Returns [lon, lat] for ORS. Checks location field, then geojson, then gpx. null = skip travel time.
-    async function resolveCoord(row) {
-      const locStr = row.dataset.location;
-      if (locStr && locStr.trim()) {
-        const [lat, lon] = locStr.split(',').map(Number);
-        if (!isNaN(lat) && !isNaN(lon)) return [lon, lat];
-      }
-      const geoStr = row.dataset.geojson;
-      if (geoStr && geoStr.trim()) {
-        try {
-          const gj = JSON.parse(geoStr);
-          const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
-          for (const f of features) {
-            if (f.geometry?.type === 'LineString' && f.geometry.coordinates.length > 0)
-              return f.geometry.coordinates[0];
-          }
-        } catch (e) {}
-      }
-      const gpxPath = row.dataset.gpx;
-      if (gpxPath && gpxPath.trim()) {
-        try {
-          const xml = await fetch(gpxPath).then(r => r.text());
-          const doc = new DOMParser().parseFromString(xml, 'text/xml');
-          const pt = doc.querySelector('trkpt');
-          if (pt) return [parseFloat(pt.getAttribute('lon')), parseFloat(pt.getAttribute('lat'))];
-        } catch (e) {}
-      }
-      return null;
-    }
-
     function formatDuration(seconds) {
       const h = Math.floor(seconds / 3600);
       const m = Math.round((seconds % 3600) / 60);
@@ -595,7 +753,13 @@
 
     (async () => {
       for (const row of document.querySelectorAll('.wishlist tbody tr')) {
-        const coord = await resolveCoord(row);
+        const coord = await getCoord(row);
+        // Store resolved coord for area filter (ZH HB as default)
+        const [rlon, rlat] = coord || [8.5403, 47.3779];
+        row.dataset.resolvedLon = rlon;
+        row.dataset.resolvedLat = rlat;
+        if (wlAreaBounds) applyFilters();
+
         if (!coord) continue;
         const [lon, lat] = coord;
         const cacheKey = `ors2_${lon.toFixed(4)}_${lat.toFixed(4)}`;

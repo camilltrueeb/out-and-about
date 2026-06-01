@@ -25,6 +25,49 @@
   /* Wohin filter bar */
   .wl-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
 
+  /* Search row + area filter toggle */
+  .wl-right { display: flex; align-items: center; gap: 8px; }
+  .wl-area-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 5px 7px;
+    color: var(--secondary);
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .wl-area-toggle:hover { background: var(--entry); color: var(--primary); border-color: var(--primary); }
+  .wl-area-toggle.active { color: #a855f7; border-color: #a855f7; }
+
+  /* Area filter map panel */
+  #wl-area-wrap { margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  #wl-area-map { height: 260px; }
+  .wl-area-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: var(--entry);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .wl-area-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    padding: 3px 10px;
+    color: var(--secondary);
+    font-family: inherit;
+  }
+  .wl-area-btn:hover { background: var(--border); color: var(--primary); }
+  .wl-area-btn.drawing { background: var(--primary); color: var(--theme); border-color: var(--primary); }
+  #wl-draw-hint { font-size: 0.82rem; color: var(--secondary); font-style: italic; }
+
   @media (min-width: 641px) {
     .wl-header-wrap {
       display: flex;
@@ -33,6 +76,7 @@
       gap: 16px;
     }
     .wl-header-wrap .page-header { margin-bottom: 0; flex: 1; }
+    .wl-right { flex-shrink: 0; }
     .wl-search { width: 220px; flex-shrink: 0; }
     .wl-mobile-sort { display: none; }
     .wl-filters {
@@ -345,7 +389,8 @@
 
     /* Mobile: search full-width above sort buttons */
     .wl-header-wrap { margin-bottom: 16px; }
-    .wl-search { width: 100%; box-sizing: border-box; }
+    .wl-right { width: 100%; }
+    .wl-search { flex: 1; min-width: 0; box-sizing: border-box; }
     .wl-msort {
       display: inline-flex;
       align-items: center;
