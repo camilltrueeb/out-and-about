@@ -90,7 +90,18 @@
         })
         .then(function (data) {
           var maxAge = data.expires_in || 3600;
-          document.cookie = 'nf_jwt=' + data.access_token + '; path=/; SameSite=Lax; Secure; max-age=' + maxAge;
+          // Set cookie via server response so iOS Safari commits it before the
+          // next navigation — document.cookie writes are async on-disk on iOS.
+          return fetch('/.netlify/functions/set-nf-jwt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ token: data.access_token, maxAge: maxAge }),
+          }).then(function (r) {
+            if (!r.ok) throw new Error('Login fehlgeschlagen (cookie)');
+          });
+        })
+        .then(function () {
           location.replace(getRedirectTarget());
         })
         .catch(function (e) {
