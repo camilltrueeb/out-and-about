@@ -17,7 +17,17 @@
     }
     .box { text-align: center; padding: 2rem; max-width: 320px; width: 100%; }
     h1 { font-size: 1.6rem; margin-bottom: 0.5rem; }
-    p { color: #666; margin-bottom: 1.5rem; font-size: 0.95rem; }
+    .subtitle { color: #666; margin-bottom: 1.5rem; font-size: 0.95rem; }
+    form { display: flex; flex-direction: column; gap: 0.75rem; }
+    input {
+      padding: 10px 14px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-family: inherit;
+      width: 100%;
+    }
+    input:focus { outline: none; border-color: #333; }
     button {
       padding: 10px 32px;
       border-radius: 8px;
@@ -27,23 +37,27 @@
       cursor: pointer;
       font-size: 1rem;
       font-family: inherit;
+      margin-top: 0.25rem;
     }
     button:hover { opacity: 0.85; }
     button:disabled { opacity: 0.45; cursor: default; }
+    .error { color: #c00; font-size: 0.9rem; margin-top: 0.25rem; }
   </style>
 </head>
 <body>
   <div class="box">
     <h1>Out and About</h1>
-    <p>Bitte einloggen um fortzufahren.</p>
-    <button id="login-btn">Einloggen</button>
+    <p class="subtitle">Bitte einloggen um fortzufahren.</p>
+    <form id="login-form" novalidate>
+      <input type="email" name="email" autocomplete="username" placeholder="E-Mail" required>
+      <input type="password" name="password" autocomplete="current-password" placeholder="Passwort" required>
+      <button type="submit" id="login-btn">Einloggen</button>
+      <p class="error" id="error-msg" hidden></p>
+    </form>
   </div>
 
-  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
   <script>
   (function () {
-    var btn = document.getElementById('login-btn');
-
     function getRedirectTarget() {
       var params = new URLSearchParams(location.search);
       var target = params.get('redirect');
@@ -51,41 +65,40 @@
       return target;
     }
 
-    netlifyIdentity.on('error', function (e) {
-      console.error('[login] identity error:', e);
-    });
+    var form = document.getElementById('login-form');
+    var btn  = document.getElementById('login-btn');
+    var err  = document.getElementById('error-msg');
 
-    netlifyIdentity.on('init', function (user) {
-      if (!user) return;
-      // If we're on the login page, nf_jwt is likely expired (auth-gate redirected us here).
-      // Auto-redirecting would loop because the CDN cookie is still stale.
-      // Force logout so the user gets a fresh nf_jwt on the next explicit login.
-      netlifyIdentity.logout();
-    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      btn.disabled = true;
+      err.hidden = true;
 
-    netlifyIdentity.on('login', function () {
-      netlifyIdentity.close();
-      location.replace(getRedirectTarget());
-    });
+      var email    = form.elements.email.value.trim();
+      var password = form.elements.password.value;
 
-    try {
-      netlifyIdentity.init();
-    } catch (e) {
-      console.error('[login] netlifyIdentity.init() threw:', e.message);
-    }
-
-    btn.addEventListener('click', function () {
-      netlifyIdentity.open();
+      fetch('/.netlify/identity/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'password', username: email, password: password }),
+      })
+        .then(function (resp) {
+          return resp.json().then(function (data) {
+            if (!resp.ok) throw new Error(data.error_description || data.msg || 'Login fehlgeschlagen');
+            return data;
+          });
+        })
+        .then(function (data) {
+          var maxAge = data.expires_in || 3600;
+          document.cookie = 'nf_jwt=' + data.access_token + '; path=/; SameSite=Lax; Secure; max-age=' + maxAge;
+          location.replace(getRedirectTarget());
+        })
+        .catch(function (e) {
+          err.textContent = e.message;
+          err.hidden = false;
+          btn.disabled = false;
+        });
     });
-
-    // Help Safari recognize the widget's inputs for autofill
-    var observer = new MutationObserver(function () {
-      var email = document.querySelector('input[type="email"]');
-      var pass = document.querySelector('input[type="password"]');
-      if (email) email.setAttribute('autocomplete', 'username');
-      if (pass) pass.setAttribute('autocomplete', 'current-password');
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
   }());
   </script>
 </body>
