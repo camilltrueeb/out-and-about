@@ -346,42 +346,37 @@
     /* Activity tags */
     .wishlist td:nth-child(3) { flex: 0 0 100%; padding: 2px 10px 6px; }
 
-    /* Action bar: distance · links · map/GPX · visits — all on one line */
+    /* Action bar: [distance ∞] left · [links map gpx visits] right */
     .wishlist-auto {
       flex: 1 1 auto;
       order: 4;
-      padding: 8px 6px 8px 12px;
-      border-top: 1px solid var(--border);
+      padding: 6px 4px 8px 12px;
       font-size: 0.85rem;
     }
     .wishlist td:nth-child(5) {
       flex: 0 0 auto;
       order: 5;
-      padding: 8px 4px;
-      border-top: 1px solid var(--border);
+      padding: 6px 4px 8px;
     }
     .wishlist td:nth-child(5):empty { display: none; }
     .wishlist-map-cell {
       flex: 0 0 auto;
       order: 6;
-      padding: 8px 4px;
-      border-top: 1px solid var(--border);
+      padding: 6px 4px 8px;
       width: auto;
       text-align: left;
     }
     .wishlist-visits {
       flex: 0 0 auto;
       order: 7;
-      padding: 8px 12px 8px 4px;
-      border-top: 1px solid var(--border);
+      padding: 6px 12px 8px 4px;
     }
 
-    /* Notes: full-width below action bar, reordered after visits */
+    /* Notes: full-width below action bar */
     .wishlist-notes {
       flex: 0 0 100%;
       order: 8;
-      padding: 6px 12px 10px;
-      border-top: 1px solid var(--border);
+      padding: 4px 12px 10px;
       max-width: none;
       font-size: 0.85rem;
     }
