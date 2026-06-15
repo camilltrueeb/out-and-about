@@ -2,46 +2,16 @@
   var h = window.h;
   var createClass = window.createClass;
 
-  var CLOUD_NAME  = 'dx2yckdac';
-  var API_KEY     = '191346469648154';
-  var AUTH_URL    = '/.netlify/functions/cloudinary-auth';
+  var CLOUD_NAME = 'dx2yckdac';
+  var ASSETS_URL = '/.netlify/functions/cloudinary-assets';
 
-  // ── Media Library (signed, no Cloudinary login required) ─────────────────
+  // ── Cloudinary thumbnail URL (200×200, avoids loading full-size in picker) ──
 
-  function openMediaLibrary(auth, callback) {
-    function doOpen() {
-      window.cloudinary.createMediaLibrary(
-        {
-          cloud_name : CLOUD_NAME,
-          api_key    : API_KEY,
-          username   : auth.username,
-          timestamp  : auth.timestamp,
-          signature  : auth.signature,
-          multiple   : true,
-          max_files  : 20,
-        },
-        {
-          insertHandler: function (data) {
-            var urls = (data.assets || [])
-              .map(function (a) { return a.secure_url || ''; })
-              .filter(Boolean);
-            if (urls.length > 0) callback(urls);
-          }
-        }
-      ).show();
-    }
-
-    if (window.cloudinary && window.cloudinary.createMediaLibrary) {
-      doOpen();
-    } else {
-      var s = document.createElement('script');
-      s.src = 'https://media-library.cloudinary.com/global/all.js';
-      s.onload = doOpen;
-      document.head.appendChild(s);
-    }
+  function thumb(url) {
+    return url.replace('/upload/', '/upload/w_200,h_200,c_fill/');
   }
 
-  // ── Upload Widget (fallback — no API secret configured) ───────────────────
+  // ── Upload Widget ─────────────────────────────────────────────────────────
 
   function openUploadWidget(callback) {
     function doOpen() {
@@ -62,7 +32,6 @@
         }
       );
     }
-
     if (window.cloudinary && window.cloudinary.openUploadWidget) {
       doOpen();
     } else {
@@ -73,19 +42,153 @@
     }
   }
 
-  // ── Picker entry point ────────────────────────────────────────────────────
+  // ── Library Picker overlay ────────────────────────────────────────────────
 
-  function openCloudinaryPicker(callback) {
-    fetch(AUTH_URL)
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (auth) {
-        if (auth && auth.signature) {
-          openMediaLibrary(auth, callback);
-        } else {
-          openUploadWidget(callback);
-        }
+  function openLibraryPicker(callback) {
+    // overlay
+    var overlay = document.createElement('div');
+    Object.assign(overlay.style, {
+      position: 'fixed', top: '0', left: '0', right: '0', bottom: '0',
+      background: 'rgba(0,0,0,0.55)', zIndex: '99999',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    });
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) overlay.remove();
+    });
+
+    // panel
+    var panel = document.createElement('div');
+    Object.assign(panel.style, {
+      background: 'white', borderRadius: '10px',
+      width: '90vw', maxWidth: '860px', maxHeight: '82vh',
+      display: 'flex', flexDirection: 'column',
+      padding: '16px', gap: '12px', boxSizing: 'border-box',
+      fontFamily: 'sans-serif',
+    });
+
+    // header
+    var header = document.createElement('div');
+    Object.assign(header.style, {
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    });
+    var title = document.createElement('strong');
+    title.textContent = 'Bilder aus Bibliothek';
+    var closeBtn = document.createElement('button');
+    closeBtn.type = 'button'; closeBtn.textContent = '✕';
+    Object.assign(closeBtn.style, {
+      background: 'none', border: 'none', cursor: 'pointer',
+      fontSize: '18px', lineHeight: '1',
+    });
+    closeBtn.addEventListener('click', function () { overlay.remove(); });
+    header.appendChild(title); header.appendChild(closeBtn);
+
+    // content (grid area)
+    var content = document.createElement('div');
+    Object.assign(content.style, { overflowY: 'auto', flex: '1', minHeight: '100px' });
+    content.textContent = 'Wird geladen…';
+
+    // footer
+    var footer = document.createElement('div');
+    Object.assign(footer.style, { display: 'flex', justifyContent: 'flex-end', gap: '8px' });
+    var cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button'; cancelBtn.textContent = 'Abbrechen';
+    Object.assign(cancelBtn.style, {
+      padding: '6px 16px', borderRadius: '6px',
+      border: '1px solid #ccc', cursor: 'pointer', background: 'white',
+    });
+    cancelBtn.addEventListener('click', function () { overlay.remove(); });
+    var addBtn = document.createElement('button');
+    addBtn.type = 'button'; addBtn.textContent = 'Hinzufügen';
+    addBtn.disabled = true;
+    Object.assign(addBtn.style, {
+      padding: '6px 16px', borderRadius: '6px',
+      border: 'none', cursor: 'pointer',
+      background: '#a855f7', color: 'white', opacity: '0.4',
+    });
+    footer.appendChild(cancelBtn); footer.appendChild(addBtn);
+
+    panel.appendChild(header); panel.appendChild(content); panel.appendChild(footer);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    // fetch & render
+    var selected = new Set();
+
+    function updateAddBtn() {
+      var n = selected.size;
+      addBtn.disabled = n === 0;
+      addBtn.style.opacity = n === 0 ? '0.4' : '1';
+      addBtn.textContent = n > 0 ? 'Hinzufügen (' + n + ')' : 'Hinzufügen';
+    }
+
+    fetch(ASSETS_URL)
+      .then(function (r) {
+        if (!r.ok) throw new Error(r.status === 404 ? 'not-configured' : 'api-error');
+        return r.json();
       })
-      .catch(function () { openUploadWidget(callback); });
+      .then(function (urls) {
+        content.textContent = '';
+        if (urls.length === 0) {
+          content.textContent = 'Keine Bilder vorhanden.';
+          return;
+        }
+        var grid = document.createElement('div');
+        Object.assign(grid.style, {
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+          gap: '6px',
+        });
+
+        urls.forEach(function (url) {
+          var wrap = document.createElement('div');
+          Object.assign(wrap.style, { position: 'relative', cursor: 'pointer' });
+
+          var img = document.createElement('img');
+          img.src = thumb(url);
+          img.loading = 'lazy';
+          Object.assign(img.style, {
+            width: '100%', aspectRatio: '1', objectFit: 'cover',
+            borderRadius: '4px', display: 'block', boxSizing: 'border-box',
+            border: '3px solid transparent',
+          });
+
+          var check = document.createElement('div');
+          Object.assign(check.style, {
+            position: 'absolute', top: '4px', right: '4px',
+            width: '22px', height: '22px', borderRadius: '50%',
+            background: '#a855f7', color: 'white',
+            display: 'none', alignItems: 'center', justifyContent: 'center',
+            fontSize: '13px', fontWeight: 'bold', pointerEvents: 'none',
+          });
+          check.textContent = '✓';
+
+          wrap.addEventListener('click', function () {
+            if (selected.has(url)) {
+              selected.delete(url);
+              img.style.border = '3px solid transparent';
+              check.style.display = 'none';
+            } else {
+              selected.add(url);
+              img.style.border = '3px solid #a855f7';
+              check.style.display = 'flex';
+            }
+            updateAddBtn();
+          });
+
+          wrap.appendChild(img); wrap.appendChild(check);
+          grid.appendChild(wrap);
+        });
+        content.appendChild(grid);
+      })
+      .catch(function (err) {
+        content.textContent = err.message === 'not-configured'
+          ? 'Bibliothek nicht verfügbar. CLOUDINARY_API_SECRET als Netlify-Umgebungsvariable setzen.'
+          : 'Fehler beim Laden der Bilder.';
+      });
+
+    addBtn.addEventListener('click', function () {
+      if (selected.size > 0) { callback(Array.from(selected)); overlay.remove(); }
+    });
   }
 
   // ── Widget component ──────────────────────────────────────────────────────
@@ -106,29 +209,21 @@
       this.props.onChange(JSON.stringify({ urls: urls, thumb: thumb }));
     },
 
-    addImages: function () {
-      var self = this;
-      var current = self.parseValue();
-      openCloudinaryPicker(function (newUrls) {
-        var merged = current.urls.slice();
-        newUrls.forEach(function (u) {
-          if (merged.indexOf(u) === -1) merged.push(u);
-        });
-        self.save(merged, current.thumb);
-      });
+    addImages: function (newUrls) {
+      var current = this.parseValue();
+      var merged  = current.urls.slice();
+      newUrls.forEach(function (u) { if (merged.indexOf(u) === -1) merged.push(u); });
+      this.save(merged, current.thumb);
     },
 
     removeImage: function (idx) {
       var current = this.parseValue();
-      var urls = current.urls.filter(function (_, i) { return i !== idx; });
-      var thumb = current.thumb;
-      if (idx < thumb) thumb--;
-      else if (idx === thumb) thumb = 0;
-      if (urls.length === 0) {
-        this.props.onChange('');
-      } else {
-        this.save(urls, Math.min(thumb, urls.length - 1));
-      }
+      var urls    = current.urls.filter(function (_, i) { return i !== idx; });
+      var t       = current.thumb;
+      if (idx < t) t--;
+      else if (idx === t) t = 0;
+      if (urls.length === 0) this.props.onChange('');
+      else this.save(urls, Math.min(t, urls.length - 1));
     },
 
     setThumb: function (idx) {
@@ -140,22 +235,27 @@
       var self = this;
       var data = this.parseValue();
       var imgs = data.urls;
-      var thumb = data.thumb;
+      var t    = data.thumb;
+
+      var btnStyle = {
+        padding: '6px 14px', borderRadius: '6px',
+        border: '1px solid #ccc', cursor: 'pointer',
+        background: 'white', fontSize: '0.85rem',
+      };
 
       return h('div', null,
         imgs.length > 0 ? h('div', {
           style: { display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }
         },
           imgs.map(function (src, i) {
-            var isThumb = i === thumb;
+            var isThumb = i === t;
             return h('div', { key: i, style: { position: 'relative' } },
               h('img', {
                 src: src, alt: '',
                 style: {
-                  width: '80px', height: '80px',
-                  objectFit: 'cover', borderRadius: '4px', display: 'block',
-                  outline: isThumb ? '2px solid #a855f7' : 'none',
-                  outlineOffset: '1px',
+                  width: '80px', height: '80px', objectFit: 'cover',
+                  borderRadius: '4px', display: 'block',
+                  outline: isThumb ? '2px solid #a855f7' : 'none', outlineOffset: '1px',
                 }
               }),
               h('button', {
@@ -166,7 +266,7 @@
                   background: 'rgba(0,0,0,0.65)', border: 'none', color: 'white',
                   borderRadius: '50%', width: '18px', height: '18px',
                   cursor: 'pointer', fontSize: '10px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0',
                 }
               }, '✕'),
               h('button', {
@@ -178,21 +278,22 @@
                   border: 'none', color: 'white',
                   borderRadius: '50%', width: '18px', height: '18px',
                   cursor: isThumb ? 'default' : 'pointer', fontSize: '11px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0'
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0',
                 }
               }, '★')
             );
           })
         ) : null,
-        h('button', {
-          type: 'button',
-          onClick: function () { self.addImages(); },
-          style: {
-            padding: '6px 16px', borderRadius: '6px',
-            border: '1px solid #ccc', cursor: 'pointer',
-            background: 'white', fontSize: '0.85rem'
-          }
-        }, imgs.length > 0 ? 'Weitere Bilder hinzufügen' : 'Bilder auswählen')
+        h('div', { style: { display: 'flex', gap: '8px' } },
+          h('button', {
+            type: 'button', style: btnStyle,
+            onClick: function () { openUploadWidget(function (urls) { self.addImages(urls); }); },
+          }, 'Hochladen'),
+          h('button', {
+            type: 'button', style: btnStyle,
+            onClick: function () { openLibraryPicker(function (urls) { self.addImages(urls); }); },
+          }, 'Aus Bibliothek')
+        )
       );
     }
   });
@@ -202,7 +303,7 @@
     if (!v) return h('p', { style: { color: '#888' } }, 'Keine Bilder');
     try {
       var parsed = Array.isArray(v) ? { urls: v } : JSON.parse(v);
-      var count = (parsed.urls || parsed).length || 0;
+      var count  = (parsed.urls || parsed).length || 0;
       return h('p', null, count + ' Bild' + (count !== 1 ? 'er' : ''));
     } catch (e) { return h('p', null, 'Bilder vorhanden'); }
   }
