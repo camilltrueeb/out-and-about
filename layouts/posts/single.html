@@ -113,7 +113,8 @@
   {{- if $gallery }}
   <div class="post-gallery post-gallery--{{ len $gallery }}">
     {{- range $i, $url := $gallery }}
-    <img src="{{ $url }}" alt="" class="post-gallery-img" loading="{{ if eq $i 0 }}eager{{ else }}lazy{{ end }}" data-idx="{{ $i }}">
+    {{- $thumbUrl := $url | replaceRE "^(https://res\\.cloudinary\\.com/[^/]+/image/upload)/" (cond (eq $i 0) "${1}/w_1200,c_fill,q_auto,f_auto/" "${1}/w_600,c_fill,q_auto,f_auto/") }}
+    <img src="{{ $thumbUrl }}" alt="" class="post-gallery-img" loading="{{ if eq $i 0 }}eager{{ else }}lazy{{ end }}" data-idx="{{ $i }}">
     {{- end }}
   </div>
   {{- else }}
@@ -167,7 +168,7 @@
 
 <script>
 (function() {
-  const imgs = {{ $gallery | jsonify }};
+  const imgs = {{ $gallery | jsonify | safeJS }};
   const modal  = document.getElementById('post-lightbox');
   const wrap   = document.getElementById('plb-wrap');
   const prev   = document.getElementById('plb-prev');
