@@ -19,6 +19,15 @@
   {{- end }}
 {{- end }}
 {{- if ge $thumbIdx (len $gallery) }}{{- $thumbIdx = 0 }}{{- end }}
+{{- /* Reorder so the thumb/hero image is always first in the grid */}}
+{{- if gt $thumbIdx 0 }}
+  {{- $hero := index $gallery $thumbIdx }}
+  {{- $rest := slice }}
+  {{- range $i, $url := $gallery }}
+    {{- if ne $i $thumbIdx }}{{- $rest = $rest | append $url }}{{- end }}
+  {{- end }}
+  {{- $gallery = slice $hero | append $rest }}
+{{- end }}
 
 <article class="post-single">
   <header class="post-header">
