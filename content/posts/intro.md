@@ -1,6 +1,7 @@
 ---
 title: Intro
 date: 2026-05-20T23:23:00.000+02:00
+gallery: '{"urls":["https://res.cloudinary.com/dx2yckdac/image/upload/v1781539228/ywevgkufn6gypst2vnqf.jpg"],"thumb":0}'
 ---
 ## Out and about
 
