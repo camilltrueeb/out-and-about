@@ -12,7 +12,7 @@
           multiple: true,
           maxFiles: 20,
           resourceType: 'image',
-          sources: ['local', 'url', 'camera'],
+          sources: ['local', 'cloudinary', 'url', 'camera'],
         },
         function (error, result) {
           if (error || !result) return;
