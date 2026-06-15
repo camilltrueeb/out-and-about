@@ -2,26 +2,63 @@
   var h = window.h;
   var createClass = window.createClass;
 
-  function openCloudinaryPicker(callback) {
+  var CLOUD_NAME  = 'dx2yckdac';
+  var API_KEY     = '191346469648154';
+  var AUTH_URL    = '/.netlify/functions/cloudinary-auth';
+
+  // ── Media Library (signed, no Cloudinary login required) ─────────────────
+
+  function openMediaLibrary(auth, callback) {
+    function doOpen() {
+      window.cloudinary.createMediaLibrary(
+        {
+          cloud_name : CLOUD_NAME,
+          api_key    : API_KEY,
+          username   : auth.username,
+          timestamp  : auth.timestamp,
+          signature  : auth.signature,
+          multiple   : true,
+          max_files  : 20,
+        },
+        {
+          insertHandler: function (data) {
+            var urls = (data.assets || [])
+              .map(function (a) { return a.secure_url || ''; })
+              .filter(Boolean);
+            if (urls.length > 0) callback(urls);
+          }
+        }
+      ).show();
+    }
+
+    if (window.cloudinary && window.cloudinary.createMediaLibrary) {
+      doOpen();
+    } else {
+      var s = document.createElement('script');
+      s.src = 'https://media-library.cloudinary.com/global/all.js';
+      s.onload = doOpen;
+      document.head.appendChild(s);
+    }
+  }
+
+  // ── Upload Widget (fallback — no API secret configured) ───────────────────
+
+  function openUploadWidget(callback) {
     function doOpen() {
       var newUrls = [];
       window.cloudinary.openUploadWidget(
         {
-          cloudName: 'dx2yckdac',
-          uploadPreset: 'outandabout_admin',
-          multiple: true,
-          maxFiles: 20,
-          resourceType: 'image',
-          sources: ['local', 'cloudinary', 'url', 'camera'],
+          cloudName    : CLOUD_NAME,
+          uploadPreset : 'outandabout_admin',
+          multiple     : true,
+          maxFiles     : 20,
+          resourceType : 'image',
+          sources      : ['local', 'url', 'camera'],
         },
         function (error, result) {
           if (error || !result) return;
-          if (result.event === 'success') {
-            newUrls.push(result.info.secure_url);
-          }
-          if (result.event === 'queues-end' && newUrls.length > 0) {
-            callback(newUrls);
-          }
+          if (result.event === 'success') newUrls.push(result.info.secure_url);
+          if (result.event === 'queues-end' && newUrls.length > 0) callback(newUrls);
         }
       );
     }
@@ -35,6 +72,23 @@
       document.head.appendChild(s);
     }
   }
+
+  // ── Picker entry point ────────────────────────────────────────────────────
+
+  function openCloudinaryPicker(callback) {
+    fetch(AUTH_URL)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (auth) {
+        if (auth && auth.signature) {
+          openMediaLibrary(auth, callback);
+        } else {
+          openUploadWidget(callback);
+        }
+      })
+      .catch(function () { openUploadWidget(callback); });
+  }
+
+  // ── Widget component ──────────────────────────────────────────────────────
 
   var GalleryPickerControl = createClass({
     parseValue: function () {
@@ -96,8 +150,7 @@
             var isThumb = i === thumb;
             return h('div', { key: i, style: { position: 'relative' } },
               h('img', {
-                src: src,
-                alt: '',
+                src: src, alt: '',
                 style: {
                   width: '80px', height: '80px',
                   objectFit: 'cover', borderRadius: '4px', display: 'block',
@@ -106,8 +159,7 @@
                 }
               }),
               h('button', {
-                type: 'button',
-                title: 'Bild entfernen',
+                type: 'button', title: 'Bild entfernen',
                 onClick: function () { self.removeImage(i); },
                 style: {
                   position: 'absolute', top: '2px', right: '2px',
@@ -118,8 +170,7 @@
                 }
               }, '✕'),
               h('button', {
-                type: 'button',
-                title: isThumb ? 'Thumbnail' : 'Als Thumbnail setzen',
+                type: 'button', title: isThumb ? 'Thumbnail' : 'Als Thumbnail setzen',
                 onClick: function () { if (!isThumb) self.setThumb(i); },
                 style: {
                   position: 'absolute', bottom: '2px', left: '2px',
@@ -137,12 +188,9 @@
           type: 'button',
           onClick: function () { self.addImages(); },
           style: {
-            padding: '6px 16px',
-            borderRadius: '6px',
-            border: '1px solid #ccc',
-            cursor: 'pointer',
-            background: 'white',
-            fontSize: '0.85rem'
+            padding: '6px 16px', borderRadius: '6px',
+            border: '1px solid #ccc', cursor: 'pointer',
+            background: 'white', fontSize: '0.85rem'
           }
         }, imgs.length > 0 ? 'Weitere Bilder hinzufügen' : 'Bilder auswählen')
       );
@@ -156,9 +204,7 @@
       var parsed = Array.isArray(v) ? { urls: v } : JSON.parse(v);
       var count = (parsed.urls || parsed).length || 0;
       return h('p', null, count + ' Bild' + (count !== 1 ? 'er' : ''));
-    } catch (e) {
-      return h('p', null, 'Bilder vorhanden');
-    }
+    } catch (e) { return h('p', null, 'Bilder vorhanden'); }
   }
 
   window.CMS.registerWidget('gallery-picker', GalleryPickerControl, GalleryPickerPreview);
