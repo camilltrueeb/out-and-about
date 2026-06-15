@@ -18,22 +18,37 @@ collections:
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Date", name: "date", widget: "datetime" }
-      - label: "Cover"
-        name: "cover"
-        widget: "object"
+      - label: "Type"
+        name: "activity"
+        widget: "select"
+        multiple: true
         required: false
-        fields:
-          - label: "Image"
-            name: "image"
-            widget: "image"
-            required: false
-            media_library:
-              name: cloudinary
-              config:
-                cloud_name: dx2yckdac
-                api_key: 191346469648154
-          - { label: "Alt text", name: "alt", widget: "string", required: false }
-          - { label: "Caption", name: "caption", widget: "string", required: false }
+        options: ["Wandern", "Velo", "Wasser", "Stadt", "Zen", "Reise", "Social", "Zelten", "SAC", "Pilze"]
+      - { label: "Reference link", name: "reference", widget: "string", required: false }
+      - { label: "Reference link 2", name: "reference_2", widget: "string", required: false }
+      - { label: "Reference link 3", name: "reference_3", widget: "string", required: false }
+      - label: "Gallery Images"
+        name: "gallery"
+        widget: "gallery-picker"
+        required: false
+      - label: "Standort"
+        name: "location"
+        widget: "location-picker"
+        required: false
+        hint: "Einzelner Punkt auf der Karte (für Einträge ohne GPX-Route)"
+      - label: "GPX Route"
+        name: "gpx"
+        widget: "file"
+        required: false
+        media_folder: "/static/gpx"
+        public_folder: "/gpx"
+        hint: "Upload a .gpx route file (optional)"
+      - label: "Route zeichnen"
+        name: "route_geojson"
+        widget: "route-drawer"
+        required: false
+        hint: "Route auf der Karte zeichnen (alternativ zu GPX)"
+      - { label: "Notes", name: "notes", widget: "text", required: false }
       - { label: "Body", name: "body", widget: "markdown" }
 
   - name: "wohin"

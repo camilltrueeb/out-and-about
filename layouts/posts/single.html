@@ -1,0 +1,433 @@
+{{- define "main" }}
+{{- $hasWl := .Params.activity }}
+
+<article class="post-single">
+  <header class="post-header">
+    {{ partial "breadcrumbs.html" . }}
+    <h1 class="post-title entry-hint-parent">
+      {{ .Title }}
+      {{- if .Draft }}
+      <span class="entry-hint" title="Draft">
+        <svg xmlns="http://www.w3.org/2000/svg" height="35" viewBox="0 -960 960 960" fill="currentColor">
+          <path d="M160-410v-60h300v60H160Zm0-165v-60h470v60H160Zm0-165v-60h470v60H160Zm360 580v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q9 9 13 20t4 22q0 11-4.5 22.5T862.09-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z" />
+        </svg>
+      </span>
+      {{- end }}
+    </h1>
+
+    {{- if $hasWl }}
+    <div class="post-wl-bar"
+         data-location="{{ .Params.location | default "" }}"
+         data-gpx="{{ .Params.gpx | default "" }}"
+         data-geojson="{{ .Params.route_geojson | default "" }}"
+         data-title="{{ .Title }}">
+
+      <span class="post-wl-tags">
+        {{- $a := .Params.activity }}
+        {{- if strings.HasPrefix (printf "%T" $a) "[]" }}
+          {{- range $a }}<span class="wishlist-tag wishlist-tag--{{ . | lower }}" title="{{ . }}">{{ partial "activity-sprite.html" . }}</span>{{- end }}
+        {{- else }}
+          <span class="wishlist-tag wishlist-tag--{{ $a | lower }}" title="{{ $a }}">{{ partial "activity-sprite.html" $a }}</span>
+        {{- end }}
+      </span>
+
+      <span class="post-wl-auto">∞</span>
+
+      {{- $refs := slice }}
+      {{- with .Params.reference }}{{- $refs = $refs | append . }}{{- end }}
+      {{- with .Params.reference_2 }}{{- $refs = $refs | append . }}{{- end }}
+      {{- with .Params.reference_3 }}{{- $refs = $refs | append . }}{{- end }}
+      {{- if $refs }}
+      <span class="post-wl-refs">
+        {{- $multi := gt (len $refs) 1 }}
+        {{- range $i, $url := $refs }}<a href="{{ $url }}" target="_blank" rel="noopener">↗{{- if $multi }}<sup>{{ add $i 1 }}</sup>{{- end }}</a> {{- end }}
+      </span>
+      {{- end }}
+
+      <button class="wl-map-btn post-wl-map" title="Auf Karte anzeigen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+          <line x1="9" y1="3" x2="9" y2="18"/>
+          <line x1="15" y1="6" x2="15" y2="21"/>
+        </svg>
+      </button>
+
+      {{- if .Params.gpx }}
+      <a href="{{ .Params.gpx | absURL }}" download class="wl-gpx-btn" title="GPX herunterladen">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </a>
+      {{- else if .Params.route_geojson }}
+      <button class="wl-gpx-btn post-wl-gpx-gen" title="GPX herunterladen"
+              data-title="{{ .Title }}"
+              data-geojson="{{ .Params.route_geojson | default "" }}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+      {{- end }}
+
+      {{- with .Params.notes }}
+      <span class="post-wl-notes" title="{{ . | replaceRE "\n+" " " | strings.TrimSpace }}">{{ . }}</span>
+      {{- end }}
+
+      <span class="wishlist-visits" data-slug="{{ .Title | urlize }}">
+        <button class="wl-dec" title="Besuch entfernen">−</button>
+        <span class="wl-count">—</span>
+        <button class="wl-inc" title="Besuch eintragen">+</button>
+      </span>
+    </div>
+    {{- end }}
+
+    {{- if .Description }}
+    <div class="post-description">{{ .Description }}</div>
+    {{- end }}
+    {{- if not (.Param "hideMeta") }}
+    <div class="post-meta">
+      {{- partial "post_meta.html" . -}}
+      {{- partial "translation_list.html" . -}}
+      {{- partial "edit_post.html" . -}}
+      {{- partial "post_canonical.html" . -}}
+    </div>
+    {{- end }}
+  </header>
+  {{- /* Derive cover from gallery thumb; fall back to cover.image for legacy posts */}}
+  {{- $gallery := slice }}
+  {{- $thumbIdx := 0 }}
+  {{- with .Params.gallery }}
+    {{- if eq (printf "%T" .) "string" }}
+      {{- $parsed := . | transform.Unmarshal }}
+      {{- if strings.HasPrefix (printf "%T" $parsed) "[]" }}
+        {{- $gallery = $parsed }}
+      {{- else }}
+        {{- with index $parsed "urls" }}{{- $gallery = . }}{{- end }}
+        {{- $thumbIdx = index $parsed "thumb" | default 0 | int }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- if ge $thumbIdx (len $gallery) }}{{- $thumbIdx = 0 }}{{- end }}
+  {{- with index $gallery $thumbIdx }}
+  <figure class="entry-cover">
+    <img loading="eager" src="{{ . }}" alt="">
+  </figure>
+  {{- end }}
+  {{- if (.Param "ShowToc") }}
+  {{- partial "toc.html" . }}
+  {{- end }}
+
+  {{- if .Content }}
+  <div class="post-content md-content">
+    {{- if not (.Param "disableAnchoredHeadings") }}
+    {{- partial "anchored_headings.html" .Content -}}
+    {{- else }}{{ .Content }}{{ end }}
+  </div>
+  {{- end }}
+
+  {{- partial "extend_post_content.html" . }}
+
+  <footer class="post-footer">
+    {{- $tags := .Language.Params.Taxonomies.tag | default "tags" }}
+    <ul class="post-tags">
+      {{- range ($.GetTerms $tags) }}
+      <li><a href="{{ .Permalink }}">{{ .LinkTitle }}</a></li>
+      {{- end }}
+    </ul>
+    {{- if (.Param "ShowPostNavLinks") }}
+    {{- partial "post_nav_links.html" . }}
+    {{- end }}
+    {{- if (and site.Params.ShowShareButtons (ne .Params.disableShare true)) }}
+    {{- partial "share_icons.html" . -}}
+    {{- end }}
+  </footer>
+
+  {{- if (.Param "comments") }}
+  {{- partial "comments.html" . }}
+  {{- end }}
+</article>
+
+{{- if $hasWl }}
+<dialog id="wl-map-modal">
+  <div class="wl-map-inner">
+    <div class="wl-map-header">
+      <strong id="wl-map-title"></strong>
+      <button class="wl-map-close" onclick="document.getElementById('wl-map-modal').close()" aria-label="Schliessen">✕</button>
+    </div>
+    <div id="wl-map-el"></div>
+  </div>
+</dialog>
+
+<script>
+(function() {
+  const bar = document.querySelector('.post-wl-bar');
+  if (!bar) return;
+
+  const locationStr = bar.dataset.location;
+  const gpxPath     = bar.dataset.gpx;
+  const geojsonStr  = bar.dataset.geojson;
+  const title       = bar.dataset.title;
+
+  let leafletLoaded = false;
+
+  function loadScript(src) {
+    return new Promise(resolve => {
+      if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = src; s.onload = resolve;
+      document.head.appendChild(s);
+    });
+  }
+  function loadCSS(href) {
+    if (!document.querySelector('link[href="' + href + '"]')) {
+      const l = Object.assign(document.createElement('link'), { rel: 'stylesheet', href });
+      document.head.appendChild(l);
+    }
+  }
+  async function ensureLeaflet() {
+    if (leafletLoaded) return;
+    loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+    await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/gpx.min.js');
+    leafletLoaded = true;
+  }
+
+  // Visits
+  const visitsCell = bar.querySelector('.wishlist-visits');
+  if (visitsCell) {
+    const slug = visitsCell.dataset.slug;
+    fetch(`/.netlify/functions/visit?slug=${slug}`)
+      .then(r => r.json())
+      .then(({ count }) => { visitsCell.querySelector('.wl-count').textContent = count; })
+      .catch(() => {});
+
+    async function postVisit(delta) {
+      const url = `/.netlify/functions/visit?slug=${slug}` + (delta === -1 ? '&delta=-1' : '');
+      visitsCell.querySelectorAll('button').forEach(b => b.disabled = true);
+      try {
+        const res = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) visitsCell.querySelector('.wl-count').textContent = data.count;
+      } finally {
+        visitsCell.querySelectorAll('button').forEach(b => b.disabled = false);
+      }
+    }
+    visitsCell.querySelector('.wl-inc')?.addEventListener('click', () => postVisit(1));
+    visitsCell.querySelector('.wl-dec')?.addEventListener('click', () => postVisit(-1));
+  }
+
+  // Resolve coordinate (location field → geojson start → gpx start)
+  async function resolveCoord() {
+    if (locationStr && locationStr.trim()) {
+      const [lat, lon] = locationStr.split(',').map(Number);
+      if (!isNaN(lat) && !isNaN(lon)) return [lon, lat];
+    }
+    if (geojsonStr && geojsonStr.trim()) {
+      try {
+        const gj = JSON.parse(geojsonStr);
+        const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
+        for (const f of features) {
+          if (f.geometry?.type === 'LineString' && f.geometry.coordinates.length > 0)
+            return f.geometry.coordinates[0];
+        }
+      } catch (e) {}
+    }
+    if (gpxPath && gpxPath.trim()) {
+      try {
+        const xml = await fetch(gpxPath).then(r => r.text());
+        const doc = new DOMParser().parseFromString(xml, 'text/xml');
+        const pt = doc.querySelector('trkpt');
+        if (pt) return [parseFloat(pt.getAttribute('lon')), parseFloat(pt.getAttribute('lat'))];
+      } catch (e) {}
+    }
+    return null;
+  }
+
+  // Auto driving duration from ZH
+  const autoEl = bar.querySelector('.post-wl-auto');
+  if (autoEl) {
+    const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA1NDQ4NDY3MmM2NTRmZjFiZWZiMDY0NzM1NjFjNDg1IiwiaCI6Im11cm11cjY0In0=';
+    const ZH = '8.5403,47.3779';
+
+    function formatDuration(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.round((seconds % 3600) / 60);
+      return h > 0 ? `${h}h ${m}min` : `${m}min`;
+    }
+
+    (async () => {
+      const coord = await resolveCoord();
+      if (!coord) return;
+      const [lon, lat] = coord;
+      const cacheKey = `ors2_${lon.toFixed(4)}_${lat.toFixed(4)}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { seconds } = JSON.parse(cached);
+          autoEl.textContent = formatDuration(seconds);
+        } catch (e) {}
+        return;
+      }
+      try {
+        const data = await fetch(
+          `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${ORS_KEY}&start=${ZH}&end=${lon},${lat}`
+        ).then(r => r.json());
+        const s = data?.features?.[0]?.properties?.summary;
+        if (s) {
+          const result = { km: Math.round(s.distance / 1000), seconds: Math.round(s.duration) };
+          localStorage.setItem(cacheKey, JSON.stringify(result));
+          autoEl.textContent = formatDuration(result.seconds);
+        }
+      } catch (e) {}
+    })();
+  }
+
+  // Map modal
+  let currentMap = null;
+
+  const pinIcon = () => window.L.divIcon({
+    className: '',
+    html: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="30" viewBox="0 0 22 30"><path fill="#a855f7" d="M11 0C4.9 0 0 4.9 0 11c0 8.3 11 19 11 19S22 19.3 22 11C22 4.9 17.1 0 11 0z"/><circle fill="white" cx="11" cy="11" r="4.5"/></svg>',
+    iconSize: [22, 30],
+    iconAnchor: [11, 30],
+  });
+
+  async function openMap() {
+    const modal = document.getElementById('wl-map-modal');
+    document.getElementById('wl-map-title').textContent = title;
+    modal.showModal();
+    await ensureLeaflet();
+
+    const mapEl = document.getElementById('wl-map-el');
+    if (currentMap) { currentMap.remove(); currentMap = null; mapEl.innerHTML = ''; }
+
+    const L = window.L;
+    const attrib = '&copy; <a href="https://www.swisstopo.admin.ch" target="_blank">swisstopo</a>';
+    const wmts = id => L.tileLayer(
+      `https://wmts.geo.admin.ch/1.0.0/${id}/default/current/3857/{z}/{x}/{y}.jpeg`,
+      { attribution: attrib, maxZoom: 18 }
+    );
+    const baseLayers = {
+      'Landeskarte': wmts('ch.swisstopo.pixelkarte-farbe'),
+      'Luftbild':    wmts('ch.swisstopo.swissimage'),
+      'Karte grau':  wmts('ch.swisstopo.pixelkarte-grau'),
+      'Weltkarte': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
+        maxZoom: 19,
+      }),
+    };
+    const ovlay = id => L.tileLayer(
+      `https://wmts.geo.admin.ch/1.0.0/${id}/default/current/3857/{z}/{x}/{y}.png`,
+      { attribution: attrib, maxZoom: 18, opacity: 0.9 }
+    );
+    const overlays = {
+      'Wanderwege': ovlay('ch.astra.wanderland'),
+      'Veloland':   ovlay('ch.astra.veloland'),
+    };
+
+    const map = L.map(mapEl, { layers: [baseLayers['Landeskarte']] }).setView([46.8, 8.2], 8);
+    currentMap = map;
+    L.control.layers(baseLayers, overlays, { position: 'topright' }).addTo(map);
+    setTimeout(() => map.invalidateSize(), 50);
+    map.getPanes().overlayPane.style.filter = 'drop-shadow(0 0 2px rgba(0,0,0,0.85))';
+
+    const routeStyle = { color: '#a855f7', weight: 5, opacity: 1 };
+    let markerLatLng = null;
+
+    if (locationStr && locationStr.trim()) {
+      const [lat, lon] = locationStr.split(',').map(Number);
+      if (!isNaN(lat) && !isNaN(lon)) markerLatLng = [lat, lon];
+    }
+    if (!markerLatLng && geojsonStr && geojsonStr.trim()) {
+      try {
+        const gj = JSON.parse(geojsonStr);
+        const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
+        for (const f of features) {
+          if (f.geometry?.type === 'LineString' && f.geometry.coordinates.length > 0) {
+            const [lon, lat] = f.geometry.coordinates[0];
+            markerLatLng = [lat, lon];
+            break;
+          }
+        }
+      } catch (e) {}
+    }
+
+    const placeMarker = (latLng) => L.marker(latLng, { icon: pinIcon() }).addTo(map);
+
+    if (markerLatLng) {
+      placeMarker(markerLatLng);
+      if (!gpxPath && !geojsonStr) map.setView(markerLatLng, 13);
+    }
+
+    if (gpxPath) {
+      new L.GPX(gpxPath, {
+        async: true,
+        polyline_options: routeStyle,
+        marker_options: { startIconUrl: '', endIconUrl: '', shadowUrl: '' }
+      }).on('loaded', function(e) {
+        map.fitBounds(e.target.getBounds(), { padding: [20, 20] });
+        if (!markerLatLng) {
+          for (const l of e.target.getLayers()) {
+            if (typeof l.getLatLngs === 'function') {
+              const lls = l.getLatLngs();
+              const flat = Array.isArray(lls[0]) ? lls[0] : lls;
+              if (flat.length > 0) { placeMarker([flat[0].lat, flat[0].lng]); break; }
+            }
+          }
+        }
+      }).addTo(map);
+    } else if (geojsonStr) {
+      try {
+        const layer = L.geoJSON(JSON.parse(geojsonStr), { style: routeStyle }).addTo(map);
+        if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+      } catch (e) {}
+    } else if (!markerLatLng) {
+      const zhHB = [47.3779, 8.5403];
+      placeMarker(zhHB);
+      map.setView(zhHB, 12);
+    }
+  }
+
+  bar.querySelector('.post-wl-map')?.addEventListener('click', openMap);
+
+  document.getElementById('wl-map-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) this.close();
+  });
+
+  // GPX generation for drawn routes
+  const gpxGenBtn = bar.querySelector('.post-wl-gpx-gen');
+  if (gpxGenBtn) {
+    gpxGenBtn.addEventListener('click', () => {
+      const geoStr = gpxGenBtn.dataset.geojson;
+      const t      = gpxGenBtn.dataset.title;
+      if (!geoStr) return;
+      try {
+        const gj = JSON.parse(geoStr);
+        const features = gj.features || (gj.type === 'Feature' ? [gj] : []);
+        const trkpts = features
+          .filter(f => f.geometry && f.geometry.type === 'LineString')
+          .flatMap(f => f.geometry.coordinates)
+          .map(([lon, lat, ele]) =>
+            `    <trkpt lat="${lat.toFixed(6)}" lon="${lon.toFixed(6)}">${ele != null ? `<ele>${ele.toFixed(1)}</ele>` : ''}</trkpt>`
+          ).join('\n');
+        const safe = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Out and About" xmlns="http://www.topografix.com/GPX/1/1">\n  <trk><name>${safe(t)}</name><trkseg>\n${trkpts}\n  </trkseg></trk>\n</gpx>`;
+        const a = Object.assign(document.createElement('a'), {
+          href: URL.createObjectURL(new Blob([gpx], { type: 'application/gpx+xml' })),
+          download: t.toLowerCase().replace(/\s+/g, '-') + '.gpx'
+        });
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      } catch (e) { console.error('GPX generation failed', e); }
+    });
+  }
+})();
+</script>
+{{- end }}
+
+{{- end }}
