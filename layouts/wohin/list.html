@@ -1,8 +1,11 @@
 {{- define "main" }}
-{{- $wlPages := .Pages }}
-{{- $postWlPages := where site.RegularPages "Section" "posts" }}
-{{- $postWlPages = where $postWlPages "Params.activity" "!=" nil }}
-{{- $allWlPages := union $wlPages $postWlPages }}
+{{- $postsByWl := dict }}
+{{- range where site.RegularPages "Section" "posts" }}
+  {{- $p := . }}
+  {{- with .Params.wishlist_entry }}
+    {{- $postsByWl = merge $postsByWl (dict . $p) }}
+  {{- end }}
+{{- end }}
 <div class="wl-header-wrap">
   <header class="page-header">
     <h1>{{ .Title }}</h1>
@@ -34,7 +37,7 @@
 <div class="wl-filters">
   <button class="wl-filter active" data-filter="all">Alle</button>
   {{- $activities := slice }}
-  {{- range $allWlPages }}
+  {{- range .Pages }}
     {{- $a := .Params.activity }}
     {{- if $a }}
       {{- if strings.HasPrefix (printf "%T" $a) "[]" }}
@@ -64,7 +67,7 @@
       </tr>
     </thead>
     <tbody>
-      {{- range sort $allWlPages "Title" }}
+      {{- range sort .Pages "Title" }}
       {{- $actVal := "" }}
       {{- $acts := .Params.activity }}
       {{- if $acts }}
@@ -96,8 +99,9 @@
           <img src="{{ index $gallery $thumbIdx }}" alt="{{ .Title }}" class="wishlist-thumb" loading="lazy">
           {{- end }}
         </td>
-        {{- if eq .Section "posts" }}
-        <td class="wishlist-name"><strong><a href="{{ .RelPermalink }}" class="wl-post-link">{{ .Title }}</a></strong></td>
+        {{- $linkedPost := index $postsByWl .File.ContentBaseName }}
+        {{- if $linkedPost }}
+        <td class="wishlist-name"><strong><a href="{{ $linkedPost.RelPermalink }}" class="wl-post-link">{{ .Title }}</a></strong></td>
         {{- else }}
         <td class="wishlist-name">{{ .Title }}</td>
         {{- end }}

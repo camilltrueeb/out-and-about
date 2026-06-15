@@ -1,5 +1,8 @@
 {{- define "main" }}
-{{- $hasWl := .Params.activity }}
+{{- $wlEntry := "" }}
+{{- with .Params.wishlist_entry }}
+  {{- $wlEntry = site.GetPage (printf "/wohin/%s" .) }}
+{{- end }}
 
 <article class="post-single">
   <header class="post-header">
@@ -15,15 +18,15 @@
       {{- end }}
     </h1>
 
-    {{- if $hasWl }}
+    {{- if $wlEntry }}
     <div class="post-wl-bar"
-         data-location="{{ .Params.location | default "" }}"
-         data-gpx="{{ .Params.gpx | default "" }}"
-         data-geojson="{{ .Params.route_geojson | default "" }}"
-         data-title="{{ .Title }}">
+         data-location="{{ $wlEntry.Params.location | default "" }}"
+         data-gpx="{{ $wlEntry.Params.gpx | default "" }}"
+         data-geojson="{{ $wlEntry.Params.route_geojson | default "" }}"
+         data-title="{{ $wlEntry.Title }}">
 
       <span class="post-wl-tags">
-        {{- $a := .Params.activity }}
+        {{- $a := $wlEntry.Params.activity }}
         {{- if strings.HasPrefix (printf "%T" $a) "[]" }}
           {{- range $a }}<span class="wishlist-tag wishlist-tag--{{ . | lower }}" title="{{ . }}">{{ partial "activity-sprite.html" . }}</span>{{- end }}
         {{- else }}
@@ -34,9 +37,9 @@
       <span class="post-wl-auto">∞</span>
 
       {{- $refs := slice }}
-      {{- with .Params.reference }}{{- $refs = $refs | append . }}{{- end }}
-      {{- with .Params.reference_2 }}{{- $refs = $refs | append . }}{{- end }}
-      {{- with .Params.reference_3 }}{{- $refs = $refs | append . }}{{- end }}
+      {{- with $wlEntry.Params.reference }}{{- $refs = $refs | append . }}{{- end }}
+      {{- with $wlEntry.Params.reference_2 }}{{- $refs = $refs | append . }}{{- end }}
+      {{- with $wlEntry.Params.reference_3 }}{{- $refs = $refs | append . }}{{- end }}
       {{- if $refs }}
       <span class="post-wl-refs">
         {{- $multi := gt (len $refs) 1 }}
@@ -52,18 +55,18 @@
         </svg>
       </button>
 
-      {{- if .Params.gpx }}
-      <a href="{{ .Params.gpx | absURL }}" download class="wl-gpx-btn" title="GPX herunterladen">
+      {{- if $wlEntry.Params.gpx }}
+      <a href="{{ $wlEntry.Params.gpx | absURL }}" download class="wl-gpx-btn" title="GPX herunterladen">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
         </svg>
       </a>
-      {{- else if .Params.route_geojson }}
+      {{- else if $wlEntry.Params.route_geojson }}
       <button class="wl-gpx-btn post-wl-gpx-gen" title="GPX herunterladen"
-              data-title="{{ .Title }}"
-              data-geojson="{{ .Params.route_geojson | default "" }}">
+              data-title="{{ $wlEntry.Title }}"
+              data-geojson="{{ $wlEntry.Params.route_geojson | default "" }}">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
@@ -72,11 +75,11 @@
       </button>
       {{- end }}
 
-      {{- with .Params.notes }}
+      {{- with $wlEntry.Params.notes }}
       <span class="post-wl-notes" title="{{ . | replaceRE "\n+" " " | strings.TrimSpace }}">{{ . }}</span>
       {{- end }}
 
-      <span class="wishlist-visits" data-slug="{{ .Title | urlize }}">
+      <span class="wishlist-visits" data-slug="{{ $wlEntry.Title | urlize }}">
         <button class="wl-dec" title="Besuch entfernen">−</button>
         <span class="wl-count">—</span>
         <button class="wl-inc" title="Besuch eintragen">+</button>
@@ -96,7 +99,8 @@
     </div>
     {{- end }}
   </header>
-  {{- /* Derive cover from gallery thumb; fall back to cover.image for legacy posts */}}
+
+  {{- /* Cover from post's own gallery thumb */}}
   {{- $gallery := slice }}
   {{- $thumbIdx := 0 }}
   {{- with .Params.gallery }}
@@ -116,6 +120,7 @@
     <img loading="eager" src="{{ . }}" alt="">
   </figure>
   {{- end }}
+
   {{- if (.Param "ShowToc") }}
   {{- partial "toc.html" . }}
   {{- end }}
@@ -150,7 +155,7 @@
   {{- end }}
 </article>
 
-{{- if $hasWl }}
+{{- if $wlEntry }}
 <dialog id="wl-map-modal">
   <div class="wl-map-inner">
     <div class="wl-map-header">
