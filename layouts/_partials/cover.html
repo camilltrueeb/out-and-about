@@ -1,0 +1,26 @@
+{{- with .cxt }}
+{{- $coverImg := "" }}
+{{- with .Params.gallery }}
+  {{- if eq (printf "%T" .) "string" }}
+    {{- $parsed := . | transform.Unmarshal }}
+    {{- $urls := slice }}
+    {{- $thumbIdx := 0 }}
+    {{- if strings.HasPrefix (printf "%T" $parsed) "[]" }}
+      {{- $urls = $parsed }}
+    {{- else }}
+      {{- with index $parsed "urls" }}{{- $urls = . }}{{- end }}
+      {{- $thumbIdx = index $parsed "thumb" | default 0 | int }}
+    {{- end }}
+    {{- if ge $thumbIdx (len $urls) }}{{- $thumbIdx = 0 }}{{- end }}
+    {{- with index $urls $thumbIdx }}{{- $coverImg = . }}{{- end }}
+  {{- end }}
+{{- end }}
+{{- if not $coverImg }}{{- $coverImg = .Params.cover.image }}{{- end }}
+
+{{- if and $coverImg (not $.isHidden) }}
+<figure class="entry-cover">
+  <img loading="{{ if $.IsSingle }}eager{{ else }}lazy{{ end }}" src="{{ $coverImg | absURL }}" alt="{{ .Params.cover.alt | default .Title }}">
+  {{- if $.IsSingle }}{{ with .Params.cover.caption }}<figcaption>{{ . | markdownify }}</figcaption>{{ end }}{{- end }}
+</figure>
+{{- end }}
+{{- end -}}

@@ -68,6 +68,43 @@
   .wl-area-btn.drawing { background: var(--primary); color: var(--theme); border-color: var(--primary); }
   #wl-draw-hint { font-size: 0.82rem; color: var(--secondary); font-style: italic; }
 
+  /* Post photo gallery grid */
+  .post-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    margin: 0 0 24px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .post-gallery--1 { grid-template-columns: 1fr; }
+  .post-gallery--2 { grid-template-columns: 1fr 1fr; }
+  .post-gallery-img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    cursor: zoom-in;
+    display: block;
+    transition: opacity 0.15s;
+  }
+  .post-gallery-img:hover { opacity: 0.9; }
+  /* First photo is the hero when 3+ images */
+  .post-gallery:not(.post-gallery--1):not(.post-gallery--2) .post-gallery-img:first-child {
+    grid-column: 1 / -1;
+    aspect-ratio: 16/7;
+  }
+  /* Lightbox reuses .wl-gallery-* styles */
+  #post-lightbox {
+    border: none;
+    padding: 0;
+    background: rgba(0,0,0,0.92);
+    width: 100dvw;
+    height: 100dvh;
+    max-width: 100dvw;
+    max-height: 100dvh;
+  }
+  #post-lightbox::backdrop { background: transparent; }
+
   /* Post link in wishlist */
   .wl-post-link {
     color: inherit;
@@ -83,12 +120,13 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 6px 10px;
-    padding: 8px 0;
-    margin: 6px 0 10px;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    font-size: 0.88rem;
+    gap: 6px 12px;
+    padding: 10px 16px;
+    margin: 10px 0 18px;
+    border-radius: 10px;
+    background: var(--entry);
+    border: 1px solid var(--border);
+    font-size: 0.87rem;
     color: var(--secondary);
   }
   .post-wl-tags {
@@ -111,7 +149,6 @@
     white-space: nowrap;
     font-style: italic;
   }
-  .post-wl-bar .wishlist-visits { white-space: nowrap; margin-left: auto; }
 
   @media (min-width: 641px) {
     .wl-header-wrap {

@@ -1,8 +1,6 @@
 ---
 title: Intro
 date: 2026-05-20T23:23:00.000+02:00
-cover:
-  image: /images/img_0003.png
 ---
 ## Out and about
 
