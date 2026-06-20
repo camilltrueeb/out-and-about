@@ -274,8 +274,10 @@
   async function ensureLeaflet() {
     if (leafletLoaded) return;
     loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
+    loadCSS('https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css');
     await loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
     await loadScript('https://cdn.jsdelivr.net/npm/leaflet-gpx@1.7.0/gpx.min.js');
+    await loadScript('https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js');
     leafletLoaded = true;
   }
 
@@ -591,6 +593,9 @@
         layers: [filterLandeskarte]
       }).setView([46.8, 8.2], 7);
       L.control.layers({ 'Landeskarte': filterLandeskarte, 'Weltkarte': filterWeltkarte }, {}, { position: 'topright' }).addTo(map);
+      L.Control.geocoder({ defaultMarkGeocode: false, position: 'topleft' })
+        .on('markgeocode', e => map.setView(e.geocode.center, 13))
+        .addTo(map);
       setTimeout(() => map.invalidateSize(), 50);
       filterMap = map;
 

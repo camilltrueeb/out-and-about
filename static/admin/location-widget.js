@@ -23,7 +23,16 @@
 
   function loadLeaflet() {
     loadCSS('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css');
-    return loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js');
+    loadCSS('https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css');
+    if (!document.getElementById('geocoder-color-fix')) {
+      var s = document.createElement('style');
+      s.id = 'geocoder-color-fix';
+      s.textContent = '.leaflet-control-geocoder-form input { color: #000 !important; }';
+      document.head.appendChild(s);
+    }
+    return loadScript('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js').then(function () {
+      return loadScript('https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js');
+    });
   }
 
   var LocationPickerControl = createClass({
@@ -90,6 +99,9 @@
         var map = L.map(self.mapContainer, { layers: [baseLayers['Landeskarte']] })
           .setView([46.8, 8.2], 8);
         L.control.layers(baseLayers, {}, { position: 'topright' }).addTo(map);
+        L.Control.geocoder({ defaultMarkGeocode: false, position: 'topleft' })
+          .on('markgeocode', function (e) { map.setView(e.geocode.center, 13); })
+          .addTo(map);
         setTimeout(function () { map.invalidateSize(); }, 50);
         self.leafletMap = map;
 
