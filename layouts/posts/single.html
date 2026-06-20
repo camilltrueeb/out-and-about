@@ -369,13 +369,19 @@
       { attribution: attrib, maxZoom: 18 }
     );
     const baseLayers = {
-      'Landeskarte': wmts('ch.swisstopo.pixelkarte-farbe'),
-      'Luftbild':    wmts('ch.swisstopo.swissimage'),
-      'Karte grau':  wmts('ch.swisstopo.pixelkarte-grau'),
-      'Weltkarte': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
-        maxZoom: 19,
-      }),
+      'Landeskarte':    wmts('ch.swisstopo.pixelkarte-farbe'),
+      'Weltkarte':      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                          maxZoom: 19,
+                        }),
+      'Weltkarte Topo': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://opentopomap.org/">OpenTopoMap</a>',
+                          subdomains: 'abc', maxZoom: 17,
+                        }),
+      'Luftbild':       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                          attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
+                          maxZoom: 19,
+                        }),
     };
     const ovlay = id => L.tileLayer(
       `https://wmts.geo.admin.ch/1.0.0/${id}/default/current/3857/{z}/{x}/{y}.png`,
