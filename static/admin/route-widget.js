@@ -45,7 +45,11 @@
       this.segmentLayers = [];
       this.markerLayers = [];
       this.existingLayer = null;
-      return { open: false, loading: false, error: null, hasDrawing: false };
+      return { open: false, loading: false, error: null, hasDrawing: false, profile: 'foot-hiking' };
+    },
+
+    setProfile: function (profile) {
+      this.setState({ profile: profile });
     },
 
     setMapContainer: function (el) {
@@ -117,10 +121,10 @@
       var self = this;
       var start = from.lng.toFixed(6) + ',' + from.lat.toFixed(6);
       var end   = to.lng.toFixed(6)   + ',' + to.lat.toFixed(6);
-
       self.setState({ loading: true, error: null });
-
-      fetch('https://api.openrouteservice.org/v2/directions/foot-hiking?api_key=' + ORS_KEY + '&start=' + start + '&end=' + end)
+      var profile = (self.state && self.state.profile) ? self.state.profile : 'foot-hiking';
+      var url = 'https://api.openrouteservice.org/v2/directions/' + profile + '?api_key=' + ORS_KEY + '&start=' + start + '&end=' + end;
+      fetch(url)
         .then(function (r) { return r.json(); })
         .then(function (data) {
           var coords = data.features && data.features[0] &&
@@ -158,7 +162,19 @@
       loadLeaflet().then(function () {
         if (!self.state.open || !self.mapContainer || self.leafletMap) return;
         var L = window.L;
-        var map = L.map(self.mapContainer).setView([46.8, 8.2], 8);
+        var existingValue = self.props.value;
+        var initialCenter = [46.8, 8.2];
+        var initialZoom = 8;
+        try {
+          var loc = window.__cms_location_value;
+          if (loc && loc.trim() && (!existingValue || !existingValue.trim())) {
+            var parts = loc.split(',');
+            var lat = parseFloat(parts[0]);
+            var lon = parseFloat(parts[1]);
+            if (!isNaN(lat) && !isNaN(lon)) { initialCenter = [lat, lon]; initialZoom = 13; }
+          }
+        } catch (e) {}
+        var map = L.map(self.mapContainer).setView(initialCenter, initialZoom);
         self.leafletMap = map;
 
         var attrib = '&copy; <a href="https://www.swisstopo.admin.ch" target="_blank">swisstopo</a>';
@@ -247,6 +263,16 @@
         h('div', { style: { display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' } },
           h('span', { style: { fontSize: '0.9rem', color: hasRoute ? '#2d6a4f' : '#888' } },
             hasRoute ? '✓ Route gespeichert' : 'Keine Route'
+          ),
+          h('select', {
+            value: self.state.profile,
+            onChange: function (e) { self.setProfile(e.target.value); },
+            title: 'Routing-Profil',
+            style: { padding: '6px 10px', borderRadius: '6px', border: '1px solid #ccc', background: 'white', fontSize: '0.85rem' }
+          },
+            h('option', { value: 'foot-hiking' }, 'Wandern'),
+            h('option', { value: 'cycling-regular' }, 'Velo'),
+            h('option', { value: 'driving-car' }, 'Auto')
           ),
           h('button', {
             type: 'button',

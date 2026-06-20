@@ -65,6 +65,7 @@
         this.marker.remove();
         this.marker = null;
       }
+      try { window.__cms_location_value = ''; } catch (e) {}
     },
 
     initMap: function () {
@@ -113,6 +114,7 @@
           if (!isNaN(lat) && !isNaN(lon)) {
             self.marker = L.marker([lat, lon]).addTo(map);
             map.setView([lat, lon], 13);
+            try { window.__cms_location_value = lat + ',' + lon; } catch (e) {}
           }
         }
 
@@ -125,6 +127,7 @@
             self.marker = L.marker(e.latlng).addTo(map);
           }
           self.props.onChange(lat + ',' + lon);
+          try { window.__cms_location_value = lat + ',' + lon; } catch (e) {}
         });
       });
     },
