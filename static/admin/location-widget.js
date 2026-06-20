@@ -40,6 +40,10 @@
       this.mapContainer = null;
       this.leafletMap = null;
       this.marker = null;
+      try {
+        var val = this.props.value;
+        if (val && val.trim()) window.__cms_location_value = val.trim();
+      } catch (e) {}
       return { open: false };
     },
 

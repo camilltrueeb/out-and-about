@@ -294,7 +294,11 @@
           error   ? h('span', { style: { fontSize: '0.85rem', color: '#c0392b' } }, error) : null
         ),
         open ? h('p', { style: { fontSize: '0.8rem', color: '#888', margin: '0 0 6px' } },
-          'Auf die Karte klicken um Wegpunkte zu setzen — die Route folgt automatisch den Wanderwegen.'
+          'Auf die Karte klicken um Wegpunkte zu setzen' + (
+            self.state.profile === 'foot-hiking'    ? ' — die Route folgt den Wanderwegen.' :
+            self.state.profile === 'cycling-regular' ? ' — die Route folgt den Velowegen.' :
+            ' — die Route folgt Strassen.'
+          )
         ) : null,
         open ? h('div', {
           ref: self.setMapContainer,
