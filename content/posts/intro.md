@@ -7,10 +7,20 @@ gallery: '{"urls":["https://res.cloudinary.com/dx2yckdac/image/upload/v178153922
 
 Wo mir scho gsi sind & wo mir no hii wend.
 
-Existierndi Resource:
+### Existierndi Resource:
 
+**Wandere**
 
 * https://bergwaerts.co
-* https://www.quaeldich.de
 * https://www.philipp-graf.com/adventures
 * https://cagan.ch/blog/kategorie/fotoblog/favorite-places/
+
+**Velo**
+
+* https://www.quaeldich.de
+* https://climbfinder.com/
+* https://www.strava.com/
+* https://www.komoot.com/
+* https://tsri.ch/a/5-rennradtouren-rennvelo-routen-zurich-gps-karte
+* https://smry.ai/www.tour-magazin.de/touren/schweiz/region-zurich-die-schonsten-rennradtouren-rund-um-zurich
+* https://www.komoot.com/smarttour/20339582
